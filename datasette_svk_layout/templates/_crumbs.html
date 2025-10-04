@@ -4,7 +4,13 @@
   {% if items %}
     <p class="crumbs">
       {% for item in items %}
-        <a href="{{ item.href }}">{{ item.label }}</a>
+        <a href="{{ item.href }}">
+          {% if loop.first and item.href == "/" %}
+            🏠 Hem
+          {% else %}
+            {{ item.label }}
+          {% endif %}
+        </a>
         {% if not loop.last %}
           /
         {% endif %}

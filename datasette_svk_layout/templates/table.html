@@ -22,7 +22,14 @@
 
 {% block content %}
 <div class="page-header" style="border-color: #{{ database_color(database) }}">
-    <h1>{{ metadata.title or table }}{% if is_view %} (view){% endif %}{% if private %}<span class="locked"> 🔒</span>{% endif %}</h1>
+    <h1>
+        {% if metadata.databases and metadata.databases[database] and metadata.databases[database].tables and metadata.databases[database].tables[table] and metadata.databases[database].tables[table].title %}
+            {{ metadata.databases[database].tables[table].title }}
+        {% else %}
+            {{ metadata.title or table }}
+        {% endif %}
+        {% if is_view %} (vy){% endif %}{% if private %}<span class="locked"> 🔒</span>{% endif %}
+    </h1>
     {% set links = table_actions() %}{% if links %}
     <details class="actions-menu-links">
         <summary><svg aria-labelledby="actions-menu-links-title" role="img"
@@ -46,6 +53,12 @@
 </div>
 
 {% block description_source_license %}{% include "_description_source_license.html" %}{% endblock %}
+
+{% if metadata.databases and metadata.databases[database] and metadata.databases[database].tables and metadata.databases[database].tables[table] and metadata.databases[database].tables[table].description %}
+<div class="table-description">
+    <p>{{ metadata.databases[database].tables[table].description }}</p>
+</div>
+{% endif %}
 
 {% if metadata.columns %}
 <dl class="column-descriptions">
@@ -135,7 +148,7 @@
     <p><a class="not-underlined" title="{{ query.sql }}" href="{{ urls.database(database) }}?{{ {'sql': query.sql}|urlencode|safe }}{% if query.params %}&amp;{{ query.params|urlencode|safe }}{% endif %}">&#x270e; <span class="underlined">Visa och redigera SQL</span></a></p>
 {% endif %}
 
-<p class="export-links">Dessa data som {% for name, url in renderers.items() %}<a href="{{ url }}">{{ name }}</a>{{ ", " if not loop.last }}{% endfor %}{% if display_rows %}, <a href="{{ url_csv }}">CSV</a> (<a href="#export">advanced</a>){% endif %}</p>
+<p class="export-links">Dessa data som {% for name, url in renderers.items() %}<a href="{{ url }}">{% if name == "json" %}📋 {{ name }}{% else %}{{ name }}{% endif %}</a>{{ ", " if not loop.last }}{% endfor %}{% if display_rows %}, <a href="{{ url_csv }}">📊 CSV</a> (<a href="#export">advanced</a>){% endif %}</p>
 
 {% if suggested_facets %}
     {% include "_suggested_facets.html" %}

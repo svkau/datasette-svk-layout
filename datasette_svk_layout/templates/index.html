@@ -9,20 +9,53 @@
 
 {% block description_source_license %}{% include "_description_source_license.html" %}{% endblock %}
 
+<div class="database-grid">
 {% for database in databases %}
-    <h2><a href="{{ urls.database(database.name) }}">{{ database.name }}</a>{% if database.private %}<span class="locked"> 🔒</span>{% endif %}</h2>
-    <!-- style="padding-left: 10px; border-left: 10px solid #{{ database.color }}" -->
-    <p>
-        {% if database.show_table_row_counts %}{{ "{:,}".format(database.table_rows_sum) }} rader i {% endif %}{{ database.tables_count }} tabell{% if database.tables_count != 1 %}er{% endif %}{% if database.tables_count and database.hidden_tables_count %}, {% endif -%}
-        {% if database.hidden_tables_count -%}
-            {% if database.show_table_row_counts %}{{ "{:,}".format(database.hidden_table_rows_sum) }} rader i {% endif %}{{ database.hidden_tables_count }} dold(a) tabell{% if database.hidden_tables_count != 1 %}er{% endif -%}
-        {% endif -%}
-        {% if database.views_count -%}
-            {% if database.tables_count or database.hidden_tables_count %}, {% endif -%}
-            {{ "{:,}".format(database.views_count) }} vy{% if database.views_count != 1 %}er{% endif %}
-        {% endif %}
-    </p>
-    <!-- <p>{% for table in database.tables_and_views_truncated %}<a href="{{ urls.table(database.name, table.name) }}"{% if table.count %} title="{{ table.count }} rows"{% endif %}>{{ table.name }}</a>{% if table.private %} 🔒{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% if database.tables_and_views_more %}, <a href="{{ urls.database(database.name) }}">...</a>{% endif %}</p> -->
+    <div class="database-card">
+        <div class="database-card-header">
+            <div class="database-card-icon">
+                {% if database.name == 'employees' %}🏢{% elif database.name == 'sakila' %}🎬{% else %}📊{% endif %}
+            </div>
+            <div class="database-card-title">
+                <h2><a href="{{ urls.database(database.name) }}">
+                    {% if metadata.databases and metadata.databases[database.name] and metadata.databases[database.name].title %}
+                        {{ metadata.databases[database.name].title }}
+                    {% else %}
+                        {{ database.name }}
+                    {% endif %}
+                </a></h2>
+            </div>
+        </div>
+        
+        <div class="database-card-description">
+            <p>
+                {% if metadata.databases and metadata.databases[database.name] and metadata.databases[database.name].description %}
+                    {{ metadata.databases[database.name].description }}
+                {% else %}
+                    Databas med information och data för Svenska kyrkan.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="database-card-meta">
+            {% if database.tables_count %}
+                <span class="database-card-badge">{{ database.tables_count }} tabeller</span>
+            {% endif %}
+            {% if database.views_count %}
+                <span class="database-card-badge">{{ database.views_count }} vyer</span>
+            {% endif %}
+            {% if database.private %}
+                <span class="database-card-badge private">🔒 Privat</span>
+            {% endif %}
+        </div>
+
+        <div class="database-card-actions">
+            <a href="{{ urls.database(database.name) }}" class="database-card-link">
+                Utforska databas
+            </a>
+        </div>
+    </div>
 {% endfor %}
+</div>
 
 {% endblock %}

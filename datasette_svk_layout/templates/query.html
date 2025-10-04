@@ -28,13 +28,30 @@
     <p class="message-error">Den här frågan kan inte köras eftersom databasen inte går att ändra.</p>
 {% endif %}
 
-<h1 style="padding-left: 10px; border-left: 10px solid #{{ database_color(database) }}">{{ metadata.title or database }}{% if canned_query and not metadata.title %}: {{ canned_query }}{% endif %}{% if private %}<span class="locked"> 🔒</span>{% endif %}</h1>
+<h1>
+    {% if canned_query %}
+        {% if metadata.databases and metadata.databases[database] and metadata.databases[database].queries and metadata.databases[database].queries[canned_query] and metadata.databases[database].queries[canned_query].title %}
+            {{ metadata.databases[database].queries[canned_query].title }}
+        {% else %}
+            {{ metadata.title or database }}{% if not metadata.title %}: {{ canned_query }}{% endif %}
+        {% endif %}
+    {% else %}
+        {{ metadata.title or database }}
+    {% endif %}
+    {% if private %}<span class="locked"> 🔒</span>{% endif %}
+</h1>
 
 {% block description_source_license %}{% include "_description_source_license.html" %}{% endblock %}
 
+{% if canned_query and metadata.databases and metadata.databases[database] and metadata.databases[database].queries and metadata.databases[database].queries[canned_query] and metadata.databases[database].queries[canned_query].description %}
+<div class="query-description">
+    <p>{{ metadata.databases[database].queries[canned_query].description }}</p>
+</div>
+{% endif %}
+
 <form class="sql" action="{{ urls.database(database) }}{% if canned_query %}/{{ canned_query }}{% endif %}" method="{% if canned_write %}post{% else %}get{% endif %}">
     <h3>Anpassad SQL-fråga{% if display_rows %} som resulterar i {% if truncated %}mer än {% endif %}{{ "{:,}".format(display_rows|length) }} rad{% if display_rows|length == 1 %}{% else %}er{% endif %}{% endif %}{% if not query_error %}
-        <span class="show-hide-sql">(<a href="{{ show_hide_link }}">{{ show_hide_text }}</a>)</span>
+        <span class="show-hide-sql"> (<a href="{{ show_hide_link }}">{% if show_hide_text == "hide" %}dölj{% elif show_hide_text == "show" %}visa{% else %}{{ show_hide_text }}{% endif %}</a>)</span>
     {% endif %}</h3>
     {% if error %}
         <p class="message-error">{{ error }}</p>
@@ -60,16 +77,16 @@
         {% endfor %}
     {% endif %}
     <p>
-        {% if not hide_sql %}<button id="sql-format" type="button" hidden>Format SQL</button>{% endif %}
+        {% if not hide_sql %}<button id="sql-format" type="button" hidden>Formatera SQL</button>{% endif %}
         {% if canned_write %}<input type="hidden" name="csrftoken" value="{{ csrftoken() }}">{% endif %}
-        <input type="submit" value="Run SQL"{% if canned_write and db_is_immutable %} disabled{% endif %}>
+        <input type="submit" value="Kör SQL"{% if canned_write and db_is_immutable %} disabled{% endif %}>
         {{ show_hide_hidden }}
-        {% if canned_query and edit_sql_url %}<a href="{{ edit_sql_url }}" class="canned-query-edit-sql">Edit SQL</a>{% endif %}
+        {% if canned_query and edit_sql_url %}<a href="{{ edit_sql_url }}" class="canned-query-edit-sql">Redigera SQL</a>{% endif %}
     </p>
 </form>
 
 {% if display_rows %}
-<p class="export-links">This data as {% for name, url in renderers.items() %}<a href="{{ url }}">{{ name }}</a>{{ ", " if not loop.last }}{% endfor %}, <a href="{{ url_csv }}">CSV</a></p>
+<p class="export-links">Dessa data som {% for name, url in renderers.items() %}<a href="{{ url }}">{% if name == "json" %}📋 {{ name }}{% else %}{{ name }}{% endif %}</a>{{ ", " if not loop.last }}{% endfor %}, <a href="{{ url_csv }}">📊 CSV</a></p>
 <div class="table-wrapper"><table class="rows-and-columns">
     <thead>
         <tr>
