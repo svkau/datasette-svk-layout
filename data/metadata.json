@@ -1,0 +1,108 @@
+{
+  "title": "Svenska kyrkan - Dataportalen",
+  "description": "Dataportalen för Svenska kyrkan med information från olika databaser och register.",
+  "about": "Svenska kyrkan",
+  "about_url": "https://www.svenskakyrkan.se",
+  "source": "Svenska kyrkan",
+  "source_url": "https://www.svenskakyrkan.se",
+  "license": "Internt bruk - Svenska kyrkan",
+  "databases": {
+    "employees": {
+      "title": "Personalregister",
+      "description": "Databas med personalinformation och organisationsstruktur för Svenska kyrkan.",
+      "source": "HR-system Svenska kyrkan",
+      "license": "Internt bruk - Svenska kyrkan",
+      "tables": {
+        "departments": {
+          "title": "Avdelningar",
+          "description": "Information om alla avdelningar och organisationsenheter inom Svenska kyrkan."
+        },
+        "employees": {
+          "title": "Anställda",
+          "description": "Personalregister med grundläggande information om alla anställda."
+        },
+        "dept_emp": {
+          "title": "Avdelningsanställning",
+          "description": "Kopplingstabell som visar vilka anställda som tillhör vilka avdelningar."
+        },
+        "dept_manager": {
+          "title": "Avdelningschefer",
+          "description": "Register över nuvarande och tidigare avdelningschefer."
+        },
+        "salaries": {
+          "title": "Löner",
+          "description": "Historisk löneinformation för alla anställda (konfidentiell)."
+        },
+        "titles": {
+          "title": "Befattningar",
+          "description": "Historik över befattningar och tjänstetitlar för anställda."
+        }
+      },
+      "queries": {
+        "current_employees": {
+          "sql": "SELECT * FROM employees LIMIT 50",
+          "title": "Nuvarande anställda",
+          "description": "Lista alla anställda som fortfarande är aktiva inom organisationen."
+        },
+        "department_overview": {
+          "sql": "SELECT * FROM departments  LIMIT 50",
+          "title": "Avdelningsöversikt",
+          "description": "Sammanställning av antal anställda per avdelning."
+        }
+      }
+    },
+    "sakila": {
+      "title": "Sakila Demonstrationsdatabas",
+      "description": "Demonstrationsdatabas med filmuthyrningsdata, används för utbildning och testning.",
+      "source": "MySQL Sakila Sample Database",
+      "license": "BSD License",
+      "tables": {
+        "film": {
+          "title": "Filmer",
+          "description": "Katalog över alla filmer som finns tillgängliga för uthyrning."
+        },
+        "actor": {
+          "title": "Skådespelare",
+          "description": "Register över skådespelare som medverkar i filmerna."
+        },
+        "customer": {
+          "title": "Kunder",
+          "description": "Kundregister med kontaktinformation och medlemsuppgifter."
+        },
+        "rental": {
+          "title": "Uthyrningar",
+          "description": "Transaktionshistorik för alla filmuthyrningar."
+        },
+        "inventory": {
+          "title": "Lager",
+          "description": "Lagersaldo och tillgänglighet för filmexemplar."
+        },
+        "payment": {
+          "title": "Betalningar",
+          "description": "Betalningshistorik och transaktionsdata."
+        },
+        "store": {
+          "title": "Butiker",
+          "description": "Information om videouthyrningsbutiker och deras personal."
+        },
+        "staff": {
+          "title": "Personal",
+          "description": "Personalregister för butikspersonal och administration."
+        }
+      },
+      "queries": {
+        "popular_films": {
+          "title": "Populära filmer",
+          "description": "Lista över de mest uthyrda filmerna under senaste månaden."
+        },
+        "revenue_report": {
+          "title": "Intäktsrapport",
+          "description": "Månadsvis sammanställning av uthyrningsintäkter per butik."
+        }
+      }
+    }
+  },
+  "plugins": {
+    "datasette-svk-layout": {}
+  }
+}

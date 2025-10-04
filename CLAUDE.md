@@ -102,6 +102,15 @@ The plugin requires no custom Python hooks beyond basic registration - it works 
   - Database naming pattern recognition (`sakila_{organisationsnummer}`)
   - Dynamic metadata application based on templates
   - ADFS integration for user-specific database filtering
+  
+ 
+### Future ideas on Metadata 
+  1. Plugin enhancement to make metadata accessible in all template contexts
+  2. Template context injection to ensure metadata is available everywhere
+  3. Dynamic lookup system that works with your future 500+ database scaling needs
+
+  We can revisit this when we work on the broader scalability solution for your organizational unit databases. For now, the interface maintains consistency where metadata access works (individual pages) while keeping
+  maintenance simple.
 
 ### 📁 Files Modified
 - `templates/index.html` - Database cards with metadata
