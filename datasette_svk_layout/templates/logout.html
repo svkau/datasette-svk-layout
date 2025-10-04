@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Logga ut{% endblock %}
+
+{% block content %}
+
+<h1>Logga ut</h1>
+
+<p>Du är inloggad som <strong>{{ display_actor(actor) }}</strong></p>
+
+<form action="{{ urls.logout() }}" method="post">
+    <div>
+        <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
+        <input type="submit" value="Log out">
+    </div>
+</form>
+
+{% endblock %}

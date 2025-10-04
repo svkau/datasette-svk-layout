@@ -1,0 +1,38 @@
+[project]
+name = "datasette-svk-layout"
+version = "0.1"
+description = "Bsaic layout for SvK:s Datasette"
+readme = "README.md"
+authors = [{name = "Henrik Vitalis"}]
+license = "Apache-2.0"
+classifiers=[
+    "Framework :: Datasette"
+]
+requires-python = ">=3.9"
+dependencies = [
+    "datasette"
+]
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+Homepage = "https://github.com/vitlais/datasette-svk-layout"
+Changelog = "https://github.com/vitlais/datasette-svk-layout/releases"
+Issues = "https://github.com/vitlais/datasette-svk-layout/issues"
+CI = "https://github.com/vitlais/datasette-svk-layout/actions"
+
+[project.entry-points.datasette]
+svk_layout = "datasette_svk_layout"
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-asyncio"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.setuptools.package-data]
+datasette_svk_layout = ["static/*", "templates/*"]
+
