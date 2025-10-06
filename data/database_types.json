@@ -1,0 +1,152 @@
+{
+  "economics": {
+    "title_template": "Ekonomisystem - {unit_name}",
+    "description_template": "Ekonomisk databas för {unit_name} med budget, transaktioner och finansiell rapportering.",
+    "allow": {
+      "execute-sql": ["user-with-sql-access"],
+      "download": true
+    },
+    "queries": {
+      "budget_summary": {
+        "sql": "SELECT department, SUM(amount) as total FROM budgets GROUP BY department ORDER BY total DESC",
+        "title": "Budgetsammanfattning för {unit_name}",
+        "description": "Översikt över budgetfördelning per avdelning för {unit_name}"
+      },
+      "monthly_transactions": {
+        "sql": "SELECT strftime('%Y-%m', date) as month, COUNT(*) as transaction_count, SUM(amount) as total FROM transactions WHERE date >= date('now', '-12 months') GROUP BY month ORDER BY month",
+        "title": "Månatliga transaktioner",
+        "description": "Transaktionsvolym och värde per månad för {unit_name}"
+      },
+      "top_customers": {
+        "sql": "SELECT customer_name, COUNT(*) as orders, SUM(amount) as total_value FROM customer_orders WHERE date >= date('now', '-1 year') GROUP BY customer_name ORDER BY total_value DESC LIMIT 10",
+        "title": "Största kunder",
+        "description": "De 10 största kunderna för {unit_name} under senaste året"
+      }
+    },
+    "tables": {
+      "actor": {
+        "title": "Budgetar",
+        "description": "Årsbudgetar och ekonomisk planering för {unit_name}"
+      },
+      "transactions": {
+        "title": "Transaktioner", 
+        "description": "Ekonomiska transaktioner och bokföring för {unit_name}"
+      },
+      "accounts": {
+        "title": "Konton",
+        "description": "Kontoplan och kontoinformation för {unit_name}"
+      },
+      "balance": {
+        "title": "Balansräkning",
+        "description": "Balansräkningsdata för {unit_name}"
+      },
+      "income": {
+        "title": "Resultaträkning", 
+        "description": "Intäkter och kostnader för {unit_name}"
+      },
+      "payment": {
+        "title": "Betalningar",
+        "description": "Betalningsdata och ekonomiska transaktioner för {unit_name}"
+      },
+      "customer": {
+        "title": "Kunder",
+        "description": "Kundregister och faktureringsinformation för {unit_name}"
+      },
+      "rental": {
+        "title": "Uthyrningar", 
+        "description": "Uthyrnings- och leasingavtal för {unit_name}"
+      },
+      "inventory": {
+        "title": "Inventarie",
+        "description": "Inventarier och tillgångar för {unit_name}"
+      },
+      "staff": {
+        "title": "Personal",
+        "description": "Personalinformation för {unit_name}"
+      }
+    }
+  },
+  "salaries": {
+    "title_template": "Lönesystem - {unit_name}",
+    "description_template": "Löne- och personaldatabas för {unit_name} med anställnings- och ersättningsinformation.",
+    "allow": {
+      "execute-sql": ["hr-manager", "payroll-admin"],
+      "download": false
+    },
+    "queries": {
+      "salary_overview": {
+        "sql": "SELECT department, COUNT(*) as employee_count, AVG(salary) as avg_salary FROM employees WHERE active = 1 GROUP BY department ORDER BY avg_salary DESC",
+        "title": "Löneöversikt per avdelning",
+        "description": "Medellon och antal anställda per avdelning för {unit_name}"
+      },
+      "new_hires": {
+        "sql": "SELECT first_name || ' ' || last_name as name, department, hire_date, salary FROM employees WHERE hire_date >= date('now', '-3 months') ORDER BY hire_date DESC",
+        "title": "Nyanställda",
+        "description": "Anställda som börjat senaste 3 månaderna på {unit_name}"
+      },
+      "department_costs": {
+        "sql": "SELECT department, COUNT(*) * AVG(salary) as total_cost FROM employees WHERE active = 1 GROUP BY department ORDER BY total_cost DESC",
+        "title": "Personalkostnader per avdelning", 
+        "description": "Totala personalkostnader per avdelning för {unit_name}"
+      }
+    },
+    "tables": {
+      "employees": {
+        "title": "Anställda",
+        "description": "Personalregister för {unit_name}"
+      },
+      "salaries": {
+        "title": "Löner",
+        "description": "Löneinformation och ersättningar för {unit_name}"
+      },
+      "departments": {
+        "title": "Avdelningar",
+        "description": "Organisationsstruktur för {unit_name}"
+      },
+      "positions": {
+        "title": "Befattningar",
+        "description": "Tjänster och befattningar inom {unit_name}"
+      },
+      "payroll": {
+        "title": "Lönelistor",
+        "description": "Månatliga lönelistor för {unit_name}"
+      }
+    }
+  },
+  "members": {
+    "title_template": "Medlemsregister - {unit_name}",
+    "description_template": "Medlemsdatabas för {unit_name} med kontaktinformation och medlemskap.",
+    "tables": {
+      "members": {
+        "title": "Medlemmar",
+        "description": "Medlemsregister för {unit_name}"
+      },
+      "households": {
+        "title": "Hushåll",
+        "description": "Hushållsinformation för {unit_name}"
+      },
+      "donations": {
+        "title": "Gåvor",
+        "description": "Gåvor och bidrag till {unit_name}"
+      }
+    }
+  },
+  "events": {
+    "title_template": "Evenemang - {unit_name}",
+    "description_template": "Evenemangs- och aktivitetsdatabas för {unit_name}.",
+    "tables": {
+      "events": {
+        "title": "Evenemang",
+        "description": "Planerade aktiviteter och evenemang för {unit_name}"
+      },
+      "bookings": {
+        "title": "Bokningar",
+        "description": "Lokalbokningar och resursreservationer för {unit_name}"
+      },
+      "participants": {
+        "title": "Deltagare",
+        "description": "Deltagare i aktiviteter för {unit_name}"
+      }
+    }
+  }
+}

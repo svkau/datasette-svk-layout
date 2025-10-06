@@ -103,6 +103,32 @@
     }
   },
   "plugins": {
+    "datasette-auth-passwords": {
+      "henvital_password_hash": {
+        "$env": "PASSWORD_HASH_1"
+      },
+      "actors": {
+        "henvital": {
+          "id": "9",
+          "username": "henvital",
+          "first_name": "Henrik",
+          "last_name": "Vitalis",
+          "organizations": [
+            {
+              "id": 10,
+              "name": "Nationell nivå"
+            },
+            {
+              "id": 5610,
+              "name": "Sunne pastorat"
+            }
+          ],
+          "current_organization_id": [
+            10
+          ]
+        }
+      }
+    },
     "datasette-svk-layout": {}
   }
 }

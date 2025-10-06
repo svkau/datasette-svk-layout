@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{{ database }}{% endblock %}
+{% block title %}
+{% set formatted_title = get_formatted_database_title(database) %}
+{% if formatted_title %}
+{{ formatted_title }}
+{% elif metadata.title %}
+{{ metadata.title }}
+{% else %}
+{{ database }}
+{% endif %}
+{% endblock %}
 
 {% block extra_head %}
 {{- super() -}}
@@ -12,7 +21,17 @@
 {% block content %}
 <div class="page-header" style="border-color:0;">
 <!-- style="border-color: #{{ database_color(database) }}" -->
-    <h1>{{ metadata.title or database }}{% if private %}<span class="locked"> 🔒</span>{% endif %}</h1>
+    <h1>
+    {% set formatted_title = get_formatted_database_title(database) %}
+    {% if formatted_title %}
+        {{ formatted_title }}
+    {% elif metadata.title %}
+        {{ metadata.title }}
+    {% else %}
+        {{ database }}
+    {% endif %}
+    {% if private %}<span class="locked"> 🔒</span>{% endif %}
+    </h1>
     {% set links = database_actions() %}{% if links %}
     <details class="actions-menu-links">
         <summary><svg aria-labelledby="actions-menu-links-title" role="img"
@@ -59,7 +78,8 @@
     </div>
 {% endif %}
 
-{% if queries %}
+{% set formatted_queries = get_formatted_queries(database) %}
+{% if queries or formatted_queries %}
 <div class="content-section-header">
     <div class="content-section-icon">⚡</div>
     <h2 id="queries">Frågor</h2>
@@ -111,6 +131,30 @@
         </div>
     </div>
 {% endfor %}
+
+{# Add dynamically generated queries from database types configuration #}
+{% for query_name, query_config in formatted_queries.items() %}
+    <div class="table-card query-card">
+        <div class="table-card-header">
+            <div class="table-card-icon">⚡</div>
+            <div class="table-card-title">
+                <h3><a href="{{ urls.query(database, query_name) }}">{{ query_config.title or query_name }}</a></h3>
+            </div>
+        </div>
+        
+        <div class="table-card-description">
+            <p>{{ query_config.description or 'Anpassad SQL-fråga för analys av data.' }}</p>
+        </div>
+        
+        <div class="table-card-stats">
+            <div class="table-card-count">SQL-fråga</div>
+            <div class="table-card-badges">
+                <span class="table-card-badge">Automatisk</span>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
 </div>
 {% endif %}
 
@@ -131,9 +175,20 @@
             </div>
         </div>
         
+        <div class="table-card-description">
+            <p>
+            {% set table_info = get_formatted_table_info(database, table.name) %}
+            {% if table_info.description %}
+                {{ table_info.description }}
+            {% else %}
+                {{ table.name|title }} - tabell med strukturerad data
+            {% endif %}
+            </p>
+        </div>
+        
         {% if table.columns %}
         <div class="table-card-columns">
-            <p>{% for column in table.columns %}{{ column }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+            <p><strong>Kolumner:</strong> {% for column in table.columns %}{{ column }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
         </div>
         {% endif %}
         

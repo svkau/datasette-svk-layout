@@ -18,7 +18,10 @@
             </div>
             <div class="database-card-title">
                 <h2><a href="{{ urls.database(database.name) }}">
-                    {% if metadata.databases and metadata.databases[database.name] and metadata.databases[database.name].title %}
+                    {% set formatted_title = get_formatted_database_title(database.name) %}
+                    {% if formatted_title %}
+                        {{ formatted_title }}
+                    {% elif metadata.databases and metadata.databases[database.name] and metadata.databases[database.name].title %}
                         {{ metadata.databases[database.name].title }}
                     {% else %}
                         {{ database.name }}
@@ -29,7 +32,10 @@
         
         <div class="database-card-description">
             <p>
-                {% if metadata.databases and metadata.databases[database.name] and metadata.databases[database.name].description %}
+                {% set formatted_description = get_formatted_database_description(database.name) %}
+                {% if formatted_description %}
+                    {{ formatted_description }}
+                {% elif metadata.databases and metadata.databases[database.name] and metadata.databases[database.name].description %}
                     {{ metadata.databases[database.name].description }}
                 {% else %}
                     Databas med information och data för Svenska kyrkan.

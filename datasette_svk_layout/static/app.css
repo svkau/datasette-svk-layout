@@ -376,7 +376,7 @@ footer {
     padding: 0.8rem 1rem 0.7rem 1rem;
     background: linear-gradient(135deg, var(--svk-wine-red) 0%, #a0044a 50%, #c5055d 100%);
     color: var(--svk-text-light);
-    overflow: hidden;
+    overflow: visible;
     box-sizing: border-box;
     min-height: 3.5rem;
     box-shadow: 0 2px 8px var(--svk-shadow);
@@ -526,14 +526,19 @@ details.nav-menu > summary:hover {
 details.nav-menu > summary::-webkit-details-marker {
     display: none;
 }
-details .nav-menu-inner {
+details.nav-menu .nav-menu-inner {
+    display: none;
+}
+
+details.nav-menu[open] .nav-menu-inner {
+    display: block;
     position: absolute;
     top: 2.8rem;
     right: 10px;
     width: 200px;
     background: linear-gradient(135deg, var(--svk-wine-red) 0%, #a0044a 100%);
     padding: 1rem;
-    z-index: 1000;
+    z-index: 9999;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     border: 1px solid rgba(255,255,255,0.1);
@@ -554,11 +559,41 @@ details .nav-menu-inner {
     padding: 0.5rem 0;
     border-bottom: 1px solid rgba(255,255,255,0.1);
     transition: color 0.2s ease;
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
 }
 .nav-menu-inner a:last-child {
     border-bottom: none;
 }
 .nav-menu-inner a:hover {
+    color: rgba(255,255,255,1);
+    padding-left: 0.5rem;
+}
+
+.nav-menu-inner ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-menu-inner li {
+    margin: 0;
+    padding: 0;
+}
+
+.nav-menu-inner button.button-as-link {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+    font-size: inherit;
+    padding: 0.5rem 0;
+    text-align: left;
+    width: 100%;
+    transition: color 0.2s ease;
+}
+
+.nav-menu-inner button.button-as-link:hover {
     color: rgba(255,255,255,1);
     padding-left: 0.5rem;
 }

@@ -30,14 +30,24 @@
             {% if links %}
             <ul>
                 {% for link in links %}
-                <li><a href="{{ link.href }}">{{ link.label }}</a></li>
+                <li>
+                    <a href="{{ link.href or '#' }}">
+                        {% if link.label %}
+                            {{ link.label }}
+                        {% else %}
+                            Menyobjekt
+                        {% endif %}
+                    </a>
+                </li>
                 {% endfor %}
             </ul>
+            {% else %}
+            <div style="color: rgba(255,255,255,0.7); font-style: italic;">Inga menyobjekt</div>
             {% endif %}
             {% if show_logout %}
             <form action="{{ urls.logout() }}" method="post">
                 <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
-                <button class="button-as-link">Log out</button>
+                <button type="submit" class="button-as-link">Logga ut</button>
             </form>{% endif %}
         </div>
     </details>{% endif %}
