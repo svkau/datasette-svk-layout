@@ -1,151 +1,349 @@
 {
-  "economics": {
-    "title_template": "Ekonomisystem - {unit_name}",
-    "description_template": "Ekonomisk databas för {unit_name} med budget, transaktioner och finansiell rapportering.",
-    "allow": {
-      "execute-sql": ["user-with-sql-access"],
-      "download": true
+  "vips": {
+    "title_template": "Vips Online - {unit_name}",
+    "description_template": "Arkiverade insatser m.m. från Vips Online"
+  },
+  "aveny": {
+    "title_template": "Ekonomihandlingar - {unit_name}",
+    "description_template": "Arkiverade uttag från ekonomisystem",
+    "templates": {
+      "database": "database-aveny-type.html"
     },
     "queries": {
-      "budget_summary": {
-        "sql": "SELECT department, SUM(amount) as total FROM budgets GROUP BY department ORDER BY total DESC",
-        "title": "Budgetsammanfattning för {unit_name}",
-        "description": "Översikt över budgetfördelning per avdelning för {unit_name}"
-      },
-      "monthly_transactions": {
-        "sql": "SELECT strftime('%Y-%m', date) as month, COUNT(*) as transaction_count, SUM(amount) as total FROM transactions WHERE date >= date('now', '-12 months') GROUP BY month ORDER BY month",
-        "title": "Månatliga transaktioner",
-        "description": "Transaktionsvolym och värde per månad för {unit_name}"
-      },
-      "top_customers": {
-        "sql": "SELECT customer_name, COUNT(*) as orders, SUM(amount) as total_value FROM customer_orders WHERE date >= date('now', '-1 year') GROUP BY customer_name ORDER BY total_value DESC LIMIT 10",
-        "title": "Största kunder",
-        "description": "De 10 största kunderna för {unit_name} under senaste året"
+      "query1": {
+        "sql": "SELECT * FROM budgetar LIMIT 10",
+        "title": "Leverantörer",
+        "description": "Specialrapport med översikt över leverantörer"
       }
     },
     "tables": {
-      "actor": {
+      "Kundreskontra": {
+        "title": "Kundreskontra",
+        "description": "Bokföringstransaktioner ordnade efter kunder",
+        "columns": {
+          "Baskonto": {
+            "title": "Baskonto",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Bokforingsdatum": {
+            "title": "Bokföringsdatum",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Verifikationsnummer": {
+            "title": "Verifikationsnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturanummer": {
+            "title": "Fakturanummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Kundnummer": {
+            "title": "Kundnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturadatum": {
+            "title": "Fakturadatum",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturabelopp": {
+            "title": "Fakturabelopp",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Valuta": {
+            "title": "Valuta",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Forfallodatum": {
+            "title": "Förfallodatum",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturarubrik": {
+            "title": "Fakturarubrik",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturasaldo": {
+            "title": "Fakturasaldo",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Personnummer": {
+            "title": "Personnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fornamn": {
+            "title": "Förnamn",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Efternamn": {
+            "title": "Efternamn",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Organisationsnummer": {
+            "title": "Organisationsnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Organisationsnamn": {
+            "title": "Organisationsnamn",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Org_adress": {
+            "title": "Org_adress",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Org_postnummer": {
+            "title": "Org_postnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Org_postort": {
+            "title": "Org_postort",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Org_land": {
+            "title": "Org_land",
+            "description": "[COLUMN DESCRIPTION]"
+          }
+        }
+      },
+      "anlaggningar_dokument": {
+        "title": "Anläggningar - dokument",
+        "description": "Dokument kopplade till transaktioner avseende anläggningar"
+      },
+      "anlaggningar_inventarier": {
+        "title": "Anläggningar - inventarier",
+        "description": "Förteckning över inventarier"
+      },
+      "anlaggningar_inventarier_fakturabilder": {
+        "title": "Fakturabilder",
+        "description": "Fakturor kopplade till anläggningar och inventarier"
+      },
+      "baskonton": {
+        "title": "Baskonton",
+        "description": "Kontoplan över baskonton"
+      },
+      "bokforingsjournaler": {
+        "title": "Bokföringsjournaler",
+        "description": "Förteckning över bokföringsjournaler"
+      },
+      "bokforingsverifikationer": {
+        "title": "Bokföringsverifikationer",
+        "description": "Förteckning över verifikationer"
+      },
+      "budgetar": {
         "title": "Budgetar",
-        "description": "Årsbudgetar och ekonomisk planering för {unit_name}"
+        "description": "Förteckning över budgetar",
+        "columns": {
+          "Budget_nr": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_namn": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_bokforingsar": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_kategori": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_antagen_text": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_antagen_datum": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          }
+        }
       },
-      "transactions": {
-        "title": "Transaktioner", 
-        "description": "Ekonomiska transaktioner och bokföring för {unit_name}"
+      "budgetrader": {
+        "title": "Budgetrader",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "accounts": {
-        "title": "Konton",
-        "description": "Kontoplan och kontoinformation för {unit_name}"
+      "budgetverifikationer": {
+        "title": "Budgetverifikationer",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "balance": {
-        "title": "Balansräkning",
-        "description": "Balansräkningsdata för {unit_name}"
+      "dimensioner": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "income": {
-        "title": "Resultaträkning", 
-        "description": "Intäkter och kostnader för {unit_name}"
+      "exportfil": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "payment": {
-        "title": "Betalningar",
-        "description": "Betalningsdata och ekonomiska transaktioner för {unit_name}"
+      "foretag_ar": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "customer": {
-        "title": "Kunder",
-        "description": "Kundregister och faktureringsinformation för {unit_name}"
+      "forsamlingar": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "rental": {
-        "title": "Uthyrningar", 
-        "description": "Uthyrnings- och leasingavtal för {unit_name}"
+      "gavor": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "inventory": {
-        "title": "Inventarie",
-        "description": "Inventarier och tillgångar för {unit_name}"
+      "gavorader": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "staff": {
-        "title": "Personal",
-        "description": "Personalinformation för {unit_name}"
+      "investeringar": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "investeringsrader": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "leverantorsreskontra": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "saldon_multidim": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "verifikationsrader": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       }
     }
   },
-  "salaries": {
-    "title_template": "Lönesystem - {unit_name}",
-    "description_template": "Löne- och personaldatabas för {unit_name} med anställnings- och ersättningsinformation.",
-    "allow": {
-      "execute-sql": ["hr-manager", "payroll-admin"],
-      "download": false
-    },
+  "lonehandlingar": {
+    "title_template": "Lönehandlingar - {unit_name}",
+    "description_template": "Arkiverade uttag från lönesystem",
     "queries": {
-      "salary_overview": {
-        "sql": "SELECT department, COUNT(*) as employee_count, AVG(salary) as avg_salary FROM employees WHERE active = 1 GROUP BY department ORDER BY avg_salary DESC",
-        "title": "Löneöversikt per avdelning",
-        "description": "Medellon och antal anställda per avdelning för {unit_name}"
-      },
-      "new_hires": {
-        "sql": "SELECT first_name || ' ' || last_name as name, department, hire_date, salary FROM employees WHERE hire_date >= date('now', '-3 months') ORDER BY hire_date DESC",
-        "title": "Nyanställda",
-        "description": "Anställda som börjat senaste 3 månaderna på {unit_name}"
-      },
-      "department_costs": {
-        "sql": "SELECT department, COUNT(*) * AVG(salary) as total_cost FROM employees WHERE active = 1 GROUP BY department ORDER BY total_cost DESC",
-        "title": "Personalkostnader per avdelning", 
-        "description": "Totala personalkostnader per avdelning för {unit_name}"
+      "query1": {
+        "sql": "SELECT * FROM anstallningar LIMIT 10",
+        "title": "[QUERY TITLE] - {unit_name}",
+        "description": "[QUERY DESCRIPTION FOR {unit_name}]"
       }
     },
     "tables": {
-      "employees": {
-        "title": "Anställda",
-        "description": "Personalregister för {unit_name}"
+      "anstallningar": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]",
+        "columns": {
+          "anstallning_id": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "arbetsgivare_id": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "personnummer": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "anstallningsnummer": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "utbetalningsgrupp_id": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "utbetalningsgrupp_namn": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "personalkategori": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "befattning": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "bksk_kod": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "bksk_klartext": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "befattningskod": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "fornamn": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "efternamn": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "skyddad": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "nationalitet": {
+            "title": "[COLUMN TITLE]",
+            "description": "[COLUMN DESCRIPTION]"
+          }
+        },
+        "allow": {
+          "view-table": ["hr-manager", "payroll-admin"],
+          "insert-row": ["hr-manager"],
+          "update-row": ["hr-manager"]
+        }
       },
-      "salaries": {
-        "title": "Löner",
-        "description": "Löneinformation och ersättningar för {unit_name}"
+      "anstallningsperioder": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "departments": {
-        "title": "Avdelningar",
-        "description": "Organisationsstruktur för {unit_name}"
+      "arbetsgivare": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "positions": {
-        "title": "Befattningar",
-        "description": "Tjänster och befattningar inom {unit_name}"
+      "arbetsmatt_heltid": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "payroll": {
-        "title": "Lönelistor",
-        "description": "Månatliga lönelistor för {unit_name}"
-      }
-    }
-  },
-  "members": {
-    "title_template": "Medlemsregister - {unit_name}",
-    "description_template": "Medlemsdatabas för {unit_name} med kontaktinformation och medlemskap.",
-    "tables": {
-      "members": {
-        "title": "Medlemmar",
-        "description": "Medlemsregister för {unit_name}"
+      "formelvariabler": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "households": {
-        "title": "Hushåll",
-        "description": "Hushållsinformation för {unit_name}"
+      "kostnadsfordelningar": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "donations": {
-        "title": "Gåvor",
-        "description": "Gåvor och bidrag till {unit_name}"
-      }
-    }
-  },
-  "events": {
-    "title_template": "Evenemang - {unit_name}",
-    "description_template": "Evenemangs- och aktivitetsdatabas för {unit_name}.",
-    "tables": {
-      "events": {
-        "title": "Evenemang",
-        "description": "Planerade aktiviteter och evenemang för {unit_name}"
+      "lonearter": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "bookings": {
-        "title": "Bokningar",
-        "description": "Lokalbokningar och resursreservationer för {unit_name}"
+      "lonekorningar": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       },
-      "participants": {
-        "title": "Deltagare",
-        "description": "Deltagare i aktiviteter för {unit_name}"
+      "lonetillagg": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "lonetransaktion_konteringar": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "lonetransaktioner": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "manadsloner": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "sysselsattningsgrader": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
+      },
+      "timloner": {
+        "title": "[TABLE TITLE]",
+        "description": "[TABLE DESCRIPTION FOR {unit_name}]"
       }
     }
   }

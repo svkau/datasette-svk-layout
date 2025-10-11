@@ -41,13 +41,16 @@
     {% if private %}<span class="locked"> 🔒</span>{% endif %}
 </h1>
 
-{% block description_source_license %}{% include "_description_source_license.html" %}{% endblock %}
-
-{% if canned_query and metadata.databases and metadata.databases[database] and metadata.databases[database].queries and metadata.databases[database].queries[canned_query] and metadata.databases[database].queries[canned_query].description %}
-<div class="query-description">
-    <p>{{ metadata.databases[database].queries[canned_query].description }}</p>
-</div>
+{% block description_source_license %}
+{% if canned_query %}
+    {% set query_desc = get_query_description(database, canned_query) %}
+    {% if query_desc %}
+    <div class="query-description">
+        <p>{{ query_desc }}</p>
+    </div>
+    {% endif %}
 {% endif %}
+{% endblock %}
 
 <form class="sql" action="{{ urls.database(database) }}{% if canned_query %}/{{ canned_query }}{% endif %}" method="{% if canned_write %}post{% else %}get{% endif %}">
     <h3>Anpassad SQL-fråga{% if display_rows %} som resulterar i {% if truncated %}mer än {% endif %}{{ "{:,}".format(display_rows|length) }} rad{% if display_rows|length == 1 %}{% else %}er{% endif %}{% endif %}{% if not query_error %}

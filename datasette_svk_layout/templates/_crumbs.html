@@ -4,11 +4,34 @@
   {% if items %}
     <p class="crumbs">
       {% for item in items %}
+        {% set display_label = item.label %}
+
+        {# Use formatted database title if this is a database breadcrumb #}
+        {% if database and item.label == database %}
+          {% set formatted_title = get_formatted_database_title(database) %}
+          {% if formatted_title %}
+            {% set display_label = formatted_title %}
+          {% endif %}
+        {% endif %}
+
+        {# Use table metadata title if this is a table breadcrumb #}
+        {% if table and item.label == table and metadata and metadata.databases and database in metadata.databases %}
+          {% set db_meta = metadata.databases[database] %}
+          {% if db_meta.tables and table in db_meta.tables and db_meta.tables[table].label %}
+            {% set display_label = db_meta.tables[table].label %}
+          {% elif get_formatted_table_info %}
+            {% set table_info = get_formatted_table_info(database, table) %}
+            {% if table_info.title and table_info.title != table %}
+              {% set display_label = table_info.title %}
+            {% endif %}
+          {% endif %}
+        {% endif %}
+
         <a href="{{ item.href }}">
           {% if loop.first and item.href == "/" %}
             🏠 Hem
           {% else %}
-            {{ item.label }}
+            {{ display_label }}
           {% endif %}
         </a>
         {% if not loop.last %}

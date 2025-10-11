@@ -180,67 +180,163 @@ Created a comprehensive configuration system for managing 500+ organizational da
 
 The system successfully demonstrates scalable management of organizational databases while maintaining the existing metadata.json system for specific overrides. Tested and verified working with automatic query generation and unit-specific naming.
 
-#### Future work on templates
-I ask: Don't code anything now, but I would like to ask you about templates. I datasette you can name templates specific to a certain database. If I wanted special templates for the economics database, I'd hade to make 500 
-  copies of those templates. It's the same problem as with metadata.json. Do you think we could do the same here: One set of templates for all economics databases?
+## Latest Session - Template Type Mapping System & UI Refinements
 
-Claude answers:  Excellent question! You're absolutely right - this is exactly the same scalability problem we just solved for metadata.json, but for templates.
+### 🎯 Template Type Mapping System - IMPLEMENTED ✅
 
-  🎯 The Template Problem:
+Successfully implemented the template type mapping system that was proposed in the previous session!
 
-  Datasette's built-in template system allows:
-  - database-economics_2520026135.html (specific to one database)
-  - table-economics_2520026135-budgets.html (specific to one table)
-  - But you'd need 500 copies for 500 economics databases
+#### **How It Works**:
 
-  ✅ Yes, We Can Solve This!
+**Custom Jinja2 Template Loader**: Created `DatabaseTypeTemplateLoader` class in `__init__.py` that intercepts Jinja2's template loading process:
 
-  We could extend our database types system to handle templates using the same approach:
+```python
+class DatabaseTypeTemplateLoader(BaseLoader):
+    """Intercepts template loading and redirects to type-specific templates"""
 
-  Concept: Template Type Mapping
+    def get_source(self, environment, template):
+        # When Datasette tries to load database-aveny_2520026135.html
+        # Our loader checks database_types.json for aveny type config
+        # If "templates" mapping exists, loads database-aveny-type.html instead
+```
 
-  database_types.json:
-  {
-    "economics": {
-      "templates": {
-        "database": "database-economics-type.html",
-        "table": "table-economics-type.html", 
-        "query": "query-economics-type.html"
-      }
-    }
+**Template Resolution Flow**:
+```
+User visits: /aveny_2520026135
+  ↓
+Datasette tries: database-aveny_2520026135.html
+  ↓
+Our loader intercepts and checks database_types.json
+  ↓
+Finds: "aveny" type with templates.database = "database-aveny-type.html"
+  ↓
+Loads: database-aveny-type.html instead
+```
+
+**Configuration in database_types.json**:
+```json
+{
+  "aveny": {
+    "title_template": "Ekonomihandlingar - {unit_name}",
+    "description_template": "Arkiverade uttag från ekonomisystem",
+    "templates": {
+      "database": "database-aveny-type.html"
+    },
+    "queries": { ... },
+    "tables": { ... }
   }
+}
+```
 
-  How It Would Work:
+#### **Features Implemented**:
 
-  1. Plugin Hook: Intercept Datasette's template resolution
-  2. Type Detection: Check if database matches a type pattern (e.g., economics_*)
-  3. Template Mapping: Redirect to the type-specific template
-  4. Fallback: Use standard templates if no type match
+1. **Custom Template Loader**: Registered via `prepare_jinja2_environment` hook
+2. **Pattern Matching**: Extracts database type from database name (`aveny_2520026135` → `aveny`)
+3. **Template Mapping**: Supports `database`, `table`, and `query` template types
+4. **Fallback System**: If no type template exists, uses standard Datasette templates
+5. **Demo Template**: Created `database-aveny-type.html` with green notice box showing it's active
 
-  Template Resolution Order:
+#### **Benefits**:
 
-  economics_2520026135 → database-economics-type.html
-  salaries_2520037173 → database-salaries-type.html
-  unknown_database → database.html (standard)
+- ✅ **One template for all databases of same type**: `database-aveny-type.html` applies to all 500+ aveny databases
+- ✅ **Type-specific layouts**: Can create unique interfaces for economics, HR, membership databases
+- ✅ **Centralized maintenance**: Update one file, affects all databases of that type
+- ✅ **No duplication**: No need to create 500 copies of the same template
+- ✅ **Automatic application**: New databases automatically use type templates
 
-  Benefits:
+#### **Example Use Cases**:
 
-  - ✅ One template controls all 500 economics databases
-  - ✅ Type-specific layouts (economics vs salaries vs members)
-  - ✅ Centralized maintenance
-  - ✅ Automatic application to new databases
-  - ✅ Custom functionality per database type
+- **Economics databases** (`aveny_*`): Budget widgets, financial KPIs, expense charts
+- **HR databases** (`lonehandlingar_*`): Privacy warnings, salary analytics, org charts
+- **Membership databases** (`vips_*`): Contact forms, donation tracking, event calendars
 
-  Implementation Options:
+#### **Files Modified**:
+- `datasette_svk_layout/__init__.py` - Added `DatabaseTypeTemplateLoader` class and `prepare_jinja2_environment` hook
+- `data/database_types.json` - Added `"templates": {"database": "database-aveny-type.html"}` to aveny type
+- `datasette_svk_layout/templates/database-aveny-type.html` - Created demo type-specific template with visual indicator
 
-  1. Template Loader Hook: Custom Jinja2 template loader
-  2. Template Path Manipulation: Modify template resolution in plugin
-  3. Dynamic Template Selection: Hook into Datasette's template choosing
+### 🎨 UI Refinements
 
-  Example Use Cases:
+#### **View Cards Styling**:
+- Updated view cards to match table card styling
+- Views now display with same card layout as tables
+- Added support for titles and descriptions from `database_types.json` for views
+- Removed custom pink gradient background from view cards for consistency
 
-  - Economics databases: Special charts, budget widgets, financial KPIs
-  - HR databases: Privacy warnings, role-based field hiding
-  - Member databases: Contact forms, donation tracking, event calendars
+#### **Column Title Display**:
+- Created custom `_table.html` template to display column titles from `database_types.json`
+- Column headers now show readable titles instead of raw database column names
+- Template uses `get_column_label(database, table, column.name)` function
+- Maintains all table functionality (sorting, filtering, etc.)
 
-  This would be a powerful extension of our database types system - making both metadata AND templates scalable for organizational databases!
+#### **Breadcrumb Improvements**:
+- Breadcrumbs now use formatted titles at all levels (database and table)
+- Database breadcrumbs show formatted titles from database_types configuration
+- Table breadcrumbs show metadata titles instead of raw table names
+
+#### **Description Blocks**:
+- Added consistent description styling across database.html, table.html, and query.html
+- All description blocks use same gradient background and wine-red border
+- Replaced license/source information blocks with descriptions from database_types.json
+
+#### **Index Page Layout**:
+- Replaced license/source section with two-column "Om tjänsten" (About) and "Snabblänkar" (Quick Links) layout
+- Added grid-based responsive design for site information
+
+#### **SQL View Example**:
+- Created `budgetsammanfattning` view in aveny database as working example
+- View aggregates budget data by year and category
+- Demonstrates how SQL views appear in Datasette interface
+
+### 🔧 Technical Architecture
+
+The plugin now has three layers of configuration:
+
+1. **metadata.json** (Optional): Specific overrides for individual databases/tables
+2. **database_types.json** (Type-level): Shared configuration for all databases of same type
+3. **Type-specific templates** (Layout): Custom layouts for entire database types
+
+**Resolution Priority**:
+```
+Specific metadata.json override
+  ↓ (if not found)
+database_types.json configuration
+  ↓ (if not found)
+Default values / standard templates
+```
+
+### 📁 Key Files
+
+#### Configuration:
+- `data/database_types.json` - Type-based configuration with template mappings
+- `data/units.json` - Organizational unit registry (orgnr → name mapping)
+- `data/metadata.json` - Optional specific overrides
+
+#### Templates:
+- `templates/database.html` - Standard database page template
+- `templates/database-aveny-type.html` - Type-specific template for aveny databases
+- `templates/table.html` - Standard table page template
+- `templates/_table.html` - Custom table rendering with column titles
+- `templates/query.html` - Query results template
+- `templates/_crumbs.html` - Breadcrumb navigation with formatted titles
+
+#### Python:
+- `datasette_svk_layout/__init__.py` - Plugin hooks, template loader, helper functions
+
+### 🎯 System Scalability
+
+The system is now fully prepared for 500+ organizational databases:
+
+- ✅ **Metadata scaling**: database_types.json handles all databases of same type
+- ✅ **Template scaling**: Type-specific templates apply automatically
+- ✅ **Query scaling**: Canned queries auto-generated for each database type
+- ✅ **Permission scaling**: Role-based access controls by type
+- ✅ **Naming scaling**: Unit names automatically inserted from units.json
+
+### 📝 Future Enhancements (Not Yet Implemented)
+
+- ADFS integration for user-specific database filtering
+- Table-level and query-level type-specific templates
+- Additional database type configurations (vips, member databases, etc.)
+- Custom widgets and charts for specific database types
+- Advanced permission rules and field-level access controls

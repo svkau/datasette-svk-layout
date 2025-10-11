@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>{% block title %}{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ urls.static_plugins('datasette-svk-layout', 'favicon.svg') }}">
     <link rel="stylesheet" href="{{ urls.static_plugins('datasette-svk-layout', 'app.css') }}?{{ app_css_hash }}">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 {% for url in extra_css_urls %}

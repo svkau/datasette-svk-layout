@@ -7,7 +7,32 @@
 {% block content %}
 <h1>{{ metadata.title or "Sökingångar till Svenska kyrkans gemensamma e-arkiv" }}{% if private %} 🔒{% endif %}</h1>
 
-{% block description_source_license %}{% include "_description_source_license.html" %}{% endblock %}
+{% block description_source_license %}
+<div class="site-info-container">
+    <div class="site-info-text">
+        <h2>Om tjänsten</h2>
+        <p>
+            Här kan du söka och utforska data från Svenska kyrkans gemensamma e-arkiv.
+            Informationen är organiserad i databaser som innehåller strukturerad data
+            från olika verksamhetssystem.
+        </p>
+        <p>
+            Använd sök- och filtreringsfunktionerna för att hitta den information du behöver.
+            Varje databas innehåller tabeller med detaljerad data som kan exporteras i olika format.
+        </p>
+    </div>
+
+    <div class="site-info-links">
+        <h2>Snabblänkar</h2>
+        <ul>
+            <li><a href="https://www.svenskakyrkan.se">Svenska kyrkan</a></li>
+            <li><a href="#">Användarguide</a></li>
+            <li><a href="#">Om e-arkivet</a></li>
+            <li><a href="#">Kontakta support</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
 
 <div class="database-grid">
 {% for database in databases %}

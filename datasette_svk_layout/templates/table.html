@@ -17,7 +17,7 @@
 {% block body_class %}table db-{{ database|to_css_class }} table-{{ table|to_css_class }}{% endblock %}
 
 {% block crumbs %}
-{{ crumbs.nav(request=request, database=database) }}
+{{ crumbs.nav(request=request, database=database, table=table) }}
 {% endblock %}
 
 {% block content %}
@@ -52,13 +52,18 @@
     </details>{% endif %}
 </div>
 
-{% block description_source_license %}{% include "_description_source_license.html" %}{% endblock %}
-
-{% if metadata.databases and metadata.databases[database] and metadata.databases[database].tables and metadata.databases[database].tables[table] and metadata.databases[database].tables[table].description %}
+{% block description_source_license %}
+{% set table_info = get_formatted_table_info(database, table) %}
+{% if table_info.description %}
+<div class="table-description">
+    <p>{{ table_info.description }}</p>
+</div>
+{% elif metadata.databases and metadata.databases[database] and metadata.databases[database].tables and metadata.databases[database].tables[table] and metadata.databases[database].tables[table].description %}
 <div class="table-description">
     <p>{{ metadata.databases[database].tables[table].description }}</p>
 </div>
 {% endif %}
+{% endblock %}
 
 {% if metadata.columns %}
 <dl class="column-descriptions">
