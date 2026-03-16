@@ -21,44 +21,26 @@ def load_units_data():
     """Load and cache units.json data"""
     global _units_cache
     if _units_cache is None:
-        # Try multiple possible paths for units.json
-        possible_paths = [
-            Path(__file__).parent.parent / "data" / "units.json",  # Development path
-            Path.cwd() / "data" / "units.json",  # Current working directory
-            Path("/home/henrik/dev-projects/datasette-svk-layout/data/units.json")  # Absolute path
-        ]
-        
+        units_file = Path(__file__).parent / "data" / "units.json"
         _units_cache = {}
-        for units_file in possible_paths:
-            if units_file.exists():
-                try:
-                    with open(units_file, 'r', encoding='utf-8') as f:
-                        _units_cache = {str(unit['orgnr']): unit['namn'] for unit in json.load(f)}
-                    break
-                except Exception as e:
-                    continue
+        try:
+            with open(units_file, 'r', encoding='utf-8') as f:
+                _units_cache = {str(unit['orgnr']): unit['namn'] for unit in json.load(f)}
+        except Exception:
+            pass
     return _units_cache
 
 def load_database_types():
     """Load and cache database_types.json data"""
     global _database_types_cache
     if _database_types_cache is None:
-        # Try multiple possible paths for database_types.json
-        possible_paths = [
-            Path(__file__).parent.parent / "data" / "database_types.json",  # Development path
-            Path.cwd() / "data" / "database_types.json",  # Current working directory
-            Path("/home/henrik/dev-projects/datasette-svk-layout/data/database_types.json")  # Absolute path
-        ]
-        
+        types_file = Path(__file__).parent / "data" / "database_types.json"
         _database_types_cache = {}
-        for types_file in possible_paths:
-            if types_file.exists():
-                try:
-                    with open(types_file, 'r', encoding='utf-8') as f:
-                        _database_types_cache = json.load(f)
-                    break
-                except Exception as e:
-                    continue
+        try:
+            with open(types_file, 'r', encoding='utf-8') as f:
+                _database_types_cache = json.load(f)
+        except Exception:
+            pass
     return _database_types_cache
 
 def get_database_config(database_name):
@@ -121,40 +103,24 @@ def get_database_type(database_name):
     return database_name
 
 @hookimpl
-def startup(datasette):
-    """Inject database type configurations into datasette metadata at startup"""
-    # Get all databases and inject type-based configurations
-    for db_name in datasette.databases.keys():
-        if db_name == "_internal":
-            continue
-            
-        db_config = get_database_config(db_name)
-        unit_name = get_unit_name(db_name)
-        
-        if db_config and unit_name:
-            # Inject queries into database metadata
-            if 'queries' in db_config:
-                db_metadata = datasette._metadata.get("databases", {}).get(db_name, {})
-                db_queries = db_metadata.get("queries", {})
-                
-                # Add formatted queries from database types
-                for query_name, query_config in db_config['queries'].items():
-                    formatted_query = copy.deepcopy(query_config)
-                    
-                    # Format title and description with unit name
-                    if 'title' in formatted_query:
-                        formatted_query['title'] = formatted_query['title'].format(unit_name=unit_name)
-                    if 'description' in formatted_query:
-                        formatted_query['description'] = formatted_query['description'].format(unit_name=unit_name)
-                    
-                    # Only add if not already defined in metadata
-                    if query_name not in db_queries:
-                        db_queries[query_name] = formatted_query
-                
-                # Update metadata
-                if db_name not in datasette._metadata.get("databases", {}):
-                    datasette._metadata.setdefault("databases", {})[db_name] = {}
-                datasette._metadata["databases"][db_name]["queries"] = db_queries
+def canned_queries(datasette, database, actor):
+    """Inject canned queries from database type configuration"""
+    db_config = get_database_config(database)
+    unit_name = get_unit_name(database)
+
+    if not db_config or not unit_name or 'queries' not in db_config:
+        return {}
+
+    queries = {}
+    for query_name, query_config in db_config['queries'].items():
+        formatted_query = copy.deepcopy(query_config)
+        if 'title' in formatted_query:
+            formatted_query['title'] = formatted_query['title'].format(unit_name=unit_name)
+        if 'description' in formatted_query:
+            formatted_query['description'] = formatted_query['description'].format(unit_name=unit_name)
+        queries[query_name] = formatted_query
+
+    return queries
 
 @hookimpl
 def database_actions(datasette, actor, database):

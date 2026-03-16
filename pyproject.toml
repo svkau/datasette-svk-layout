@@ -34,8 +34,8 @@ asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.setuptools]
-packages = ["datasette_svk_layout"]
+packages = ["datasette_svk_layout", "datasette_svk_layout.data", "datasette_svk_layout.static", "datasette_svk_layout.templates"]
 
 [tool.setuptools.package-data]
-datasette_svk_layout = ["static/*", "templates/*"]
+datasette_svk_layout = ["static/*", "templates/*", "data/*"]
 
