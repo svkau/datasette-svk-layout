@@ -10,3 +10,6 @@ venv
 .vscode
 dist
 build
+*.db
+Färgkoder.png
+data/PERMISSIONS_EXAMPLE.md

@@ -21,12 +21,15 @@
 {% endblock %}
 
 {% block content %}
+{% set table_info = get_formatted_table_info(database, table) %}
 <div class="page-header" style="border-color: #{{ database_color(database) }}">
     <h1>
-        {% if metadata.databases and metadata.databases[database] and metadata.databases[database].tables and metadata.databases[database].tables[table] and metadata.databases[database].tables[table].title %}
+        {% if table_info.title != table %}
+            {{ table_info.title }}
+        {% elif metadata.databases and metadata.databases[database] and metadata.databases[database].tables and metadata.databases[database].tables[table] and metadata.databases[database].tables[table].title %}
             {{ metadata.databases[database].tables[table].title }}
         {% else %}
-            {{ metadata.title or table }}
+            {{ table }}
         {% endif %}
         {% if is_view %} (vy){% endif %}{% if private %}<span class="locked"> 🔒</span>{% endif %}
     </h1>

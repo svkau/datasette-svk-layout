@@ -98,8 +98,7 @@
     </div>
 {% endif %}
 
-{% set formatted_queries = get_formatted_queries(database) %}
-{% if queries or formatted_queries %}
+{% if queries %}
 <div class="content-section-header">
     <div class="content-section-icon">⚡</div>
     <h2 id="queries">Frågor</h2>
@@ -111,65 +110,18 @@
         <div class="table-card-header">
             <div class="table-card-icon">⚡</div>
             <div class="table-card-title">
-                <h3><a href="{{ urls.query(database, query.name) }}{% if query.fragment %}#{{ query.fragment }}{% endif %}">
-                    {% if query.name == 'current_employees' %}
-                        Nuvarande anställda
-                    {% elif query.name == 'department_overview' %}
-                        Avdelningsöversikt
-                    {% elif query.name == 'popular_films' %}
-                        Populära filmer
-                    {% elif query.name == 'revenue_report' %}
-                        Intäktsrapport
-                    {% else %}
-                        {{ query.title or query.name }}
-                    {% endif %}
-                </a></h3>
+                <h3><a href="{{ urls.query(database, query.name) }}{% if query.fragment %}#{{ query.fragment }}{% endif %}">{{ query.title or query.name }}</a></h3>
             </div>
         </div>
-        
+
         <div class="table-card-description">
-            <p>
-                {% if query.name == 'current_employees' %}
-                    Lista alla anställda som fortfarande är aktiva inom organisationen.
-                {% elif query.name == 'department_overview' %}
-                    Sammanställning av antal anställda per avdelning.
-                {% elif query.name == 'popular_films' %}
-                    Lista över de mest uthyrda filmerna under senaste månaden.
-                {% elif query.name == 'revenue_report' %}
-                    Månadsvis sammanställning av uthyrningsintäkter per butik.
-                {% else %}
-                    {{ query.description or 'Anpassad SQL-fråga för analys av data.' }}
-                {% endif %}
-            </p>
+            <p>{{ query.description or 'Anpassad SQL-fråga för analys av data.' }}</p>
         </div>
-        
+
         <div class="table-card-stats">
             <div class="table-card-count">SQL-fråga</div>
             <div class="table-card-badges">
                 {% if query.private %}<span class="table-card-badge">🔒 Privat</span>{% endif %}
-            </div>
-        </div>
-    </div>
-{% endfor %}
-
-{# Add dynamically generated queries from database types configuration #}
-{% for query_name, query_config in formatted_queries.items() %}
-    <div class="table-card query-card">
-        <div class="table-card-header">
-            <div class="table-card-icon">⚡</div>
-            <div class="table-card-title">
-                <h3><a href="{{ urls.query(database, query_name) }}">{{ query_config.title or query_name }}</a></h3>
-            </div>
-        </div>
-        
-        <div class="table-card-description">
-            <p>{{ query_config.description or 'Anpassad SQL-fråga för analys av data.' }}</p>
-        </div>
-        
-        <div class="table-card-stats">
-            <div class="table-card-count">SQL-fråga</div>
-            <div class="table-card-badges">
-                <span class="table-card-badge">Automatisk</span>
             </div>
         </div>
     </div>
