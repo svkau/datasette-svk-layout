@@ -14,4 +14,5 @@ build
 Färgkoder.png
 data/PERMISSIONS_EXAMPLE.md
 actor.json
-dev_plugins/
+dev_plugins/*.py
+!dev_plugins/*.example.py
