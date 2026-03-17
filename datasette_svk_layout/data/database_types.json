@@ -86,30 +86,78 @@
             "description": "[COLUMN DESCRIPTION]"
           },
           "Org_adress": {
-            "title": "Org_adress",
+            "title": "Org-adress",
             "description": "[COLUMN DESCRIPTION]"
           },
           "Org_postnummer": {
-            "title": "Org_postnummer",
+            "title": "Org-postnummer",
             "description": "[COLUMN DESCRIPTION]"
           },
           "Org_postort": {
-            "title": "Org_postort",
+            "title": "Org-postort",
             "description": "[COLUMN DESCRIPTION]"
           },
           "Org_land": {
-            "title": "Org_land",
+            "title": "Org-land",
             "description": "[COLUMN DESCRIPTION]"
           }
         }
       },
       "anlaggningar_dokument": {
         "title": "Anläggningar - dokument",
-        "description": "Dokument kopplade till transaktioner avseende anläggningar"
+        "description": "Dokument kopplade till transaktioner avseende anläggningar",
+        "columns": {
+          "Link": {
+            "title": "Länk",
+            "description": ""
+          },
+          "rowid": {
+            "title": "Rad-ID",
+            "description": ""
+          },
+          "Anlaggningsnummer": {
+            "title": "Anläggningsnummer",
+            "description": ""
+          },
+          "Dokumentnummer": {
+            "title": "Dokumentnummer",
+            "description": ""
+          },
+          "Beskrivning": {
+            "title": "Beskrivning",
+            "description": ""
+          },
+          "Filnamn": {
+            "title": "Länk till dokument",
+            "description": ""
+          }
+        }
       },
       "anlaggningar_inventarier": {
         "title": "Anläggningar - inventarier",
-        "description": "Förteckning över inventarier"
+        "description": "Förteckning över inventarier",
+         "columns": {
+           "Anlaggningsnummer": {
+             "title": "Anläggningsnummer",
+             "description": ""
+           },
+           "Anlaggningsnamn": {
+             "title": "Anläggningsnamn",
+             "description": ""
+           },
+           "Tidigare_ID": {
+             "title": "Tidigare-ID",
+             "description": ""
+           },
+           "Anskaffningsdatum": {
+             "title": "Anskaffningsdatum",
+             "description": ""
+           },
+           "Omrade": {
+             "title": "Område",
+             "description": ""
+           }
+         }
       },
       "anlaggningar_inventarier_fakturabilder": {
         "title": "Fakturabilder",
