@@ -13,3 +13,6 @@ build
 *.db
 Färgkoder.png
 data/PERMISSIONS_EXAMPLE.md
+actor.json
+dev_plugins/*.py
+!dev_plugins/*.example.py
