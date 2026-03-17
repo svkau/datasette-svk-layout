@@ -16,7 +16,7 @@
 {% include "_codemirror.html" %}
 {% endblock %}
 
-{% block body_class %}db db-{{ database|to_css_class }}{% endblock %}
+{% block body_class %}db db-{{ database|to_css_class }} db-type-aveny{% endblock %}
 
 {% block content %}
 <div class="page-header" style="border-color:0;">
@@ -52,7 +52,16 @@
             {% endif %}
         </div>
     </details>{% endif %}
-</div> 
+</div>
+
+<div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-left: 4px solid #4caf50; padding: 1rem; margin: 1rem 0; border-radius: 8px;">
+    <p style="margin: 0; color: #2e7d32; font-weight: 600;">
+        ✨ Detta är en typspecifik mall för ekonomihandlingar (aveny-typ)
+    </p>
+    <p style="margin: 0.5rem 0 0 0; color: #2e7d32; font-size: 0.9rem;">
+        Denna mall används automatiskt för alla aveny-databaser baserat på databas typen.
+    </p>
+</div>
 
 {% block description_source_license %}
 {% set formatted_description = get_formatted_database_description(database) %}

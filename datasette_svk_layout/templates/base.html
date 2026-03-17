@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>{% block title %}{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ urls.static_plugins('datasette-svk-layout', 'favicon.svg') }}">
     <link rel="stylesheet" href="{{ urls.static_plugins('datasette-svk-layout', 'app.css') }}?{{ app_css_hash }}">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 {% for url in extra_css_urls %}
@@ -17,7 +18,7 @@
 </head>
 <body class="{% block body_class %}{% endblock %}">
 <div class="not-footer">
-<header><nav>{% block nav %}{% block crumbs %}{{ crumbs.nav(request=request) }}{% endblock %}
+<header><nav>{% block nav %}<div class="logo"><img src="{{ urls.static_plugins('datasette-svk-layout', 'svenska_kyrkan_logo.png') }}" alt="Svenska kyrkan"></div>{% block crumbs %}{{ crumbs.nav(request=request) }}{% endblock %}
     {% set links = menu_links() %}{% if links or show_logout %}
     <details class="nav-menu">
         <summary><svg aria-labelledby="nav-menu-svg-title" role="img"
@@ -30,14 +31,24 @@
             {% if links %}
             <ul>
                 {% for link in links %}
-                <li><a href="{{ link.href }}">{{ link.label }}</a></li>
+                <li>
+                    <a href="{{ link.href or '#' }}">
+                        {% if link.label %}
+                            {{ link.label }}
+                        {% else %}
+                            Menyobjekt
+                        {% endif %}
+                    </a>
+                </li>
                 {% endfor %}
             </ul>
+            {% else %}
+            <div style="color: rgba(255,255,255,0.7); font-style: italic;">Inga menyobjekt</div>
             {% endif %}
             {% if show_logout %}
             <form action="{{ urls.logout() }}" method="post">
                 <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
-                <button class="button-as-link">Log out</button>
+                <button type="submit" class="button-as-link">Logga ut</button>
             </form>{% endif %}
         </div>
     </details>{% endif %}

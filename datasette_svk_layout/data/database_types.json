@@ -1,0 +1,345 @@
+{
+  "vips": {
+    "title_template": "Vips Online - {unit_name}",
+    "description_template": "Arkiverade insatser m.m. från Vips Online"
+  },
+  "aveny": {
+    "title_template": "Ekonomihandlingar - {unit_name}",
+    "description_template": "Arkiverade uttag från ekonomisystem",
+    "templates": {
+      "database": "database-aveny-type.html"
+    },
+    "queries": {
+      "query1": {
+        "sql": "SELECT * FROM budgetar LIMIT 10",
+        "title": "Leverantörer",
+        "description": "Specialrapport med översikt över leverantörer"
+      }
+    },
+    "tables": {
+      "Kundreskontra": {
+        "title": "Kundreskontra",
+        "description": "Bokföringstransaktioner ordnade efter kunder",
+        "columns": {
+          "Baskonto": {
+            "title": "Baskonto",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Bokforingsdatum": {
+            "title": "Bokföringsdatum",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Verifikationsnummer": {
+            "title": "Verifikationsnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturanummer": {
+            "title": "Fakturanummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Kundnummer": {
+            "title": "Kundnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturadatum": {
+            "title": "Fakturadatum",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturabelopp": {
+            "title": "Fakturabelopp",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Valuta": {
+            "title": "Valuta",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Forfallodatum": {
+            "title": "Förfallodatum",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturarubrik": {
+            "title": "Fakturarubrik",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fakturasaldo": {
+            "title": "Fakturasaldo",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Personnummer": {
+            "title": "Personnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Fornamn": {
+            "title": "Förnamn",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Efternamn": {
+            "title": "Efternamn",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Organisationsnummer": {
+            "title": "Organisationsnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Organisationsnamn": {
+            "title": "Organisationsnamn",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Org_adress": {
+            "title": "Org_adress",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Org_postnummer": {
+            "title": "Org_postnummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Org_postort": {
+            "title": "Org_postort",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Org_land": {
+            "title": "Org_land",
+            "description": "[COLUMN DESCRIPTION]"
+          }
+        }
+      },
+      "anlaggningar_dokument": {
+        "title": "Anläggningar - dokument",
+        "description": "Dokument kopplade till transaktioner avseende anläggningar"
+      },
+      "anlaggningar_inventarier": {
+        "title": "Anläggningar - inventarier",
+        "description": "Förteckning över inventarier"
+      },
+      "anlaggningar_inventarier_fakturabilder": {
+        "title": "Fakturabilder",
+        "description": "Fakturor kopplade till anläggningar och inventarier"
+      },
+      "baskonton": {
+        "title": "Baskonton",
+        "description": "Kontoplan över baskonton"
+      },
+      "bokforingsjournaler": {
+        "title": "Bokföringsjournaler",
+        "description": "Förteckning över bokföringsjournaler"
+      },
+      "bokforingsverifikationer": {
+        "title": "Bokföringsverifikationer",
+        "description": "Förteckning över verifikationer"
+      },
+      "budgetar": {
+        "title": "Budgetar",
+        "description": "Förteckning över budgetar",
+        "columns": {
+          "Budget_nr": {
+            "title": "Nummer",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_namn": {
+            "title": "Namn",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_bokforingsar": {
+            "title": "Bokföringsår",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_kategori": {
+            "title": "Kategori",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_antagen_text": {
+            "title": "Antagen av",
+            "description": "[COLUMN DESCRIPTION]"
+          },
+          "Budget_antagen_datum": {
+            "title": "Antagen datum",
+            "description": "[COLUMN DESCRIPTION]"
+          }
+        }
+      },
+      "budgetrader": {
+        "title": "Budgetrader",
+        "description": "Enskilda budgetrader"
+      },
+      "budgetverifikationer": {
+        "title": "Budgetverifikationer",
+        "description": "Budgetverifikationer"
+      },
+      "dimensioner": {
+        "title": "Dimensioner",
+        "description": "Lista över de dimensioner som används"
+      },
+      "exportfil": {
+        "title": "Exportfil",
+        "description": "Information om arkivleveranser från ekonomisystemet"
+      },
+      "foretag_ar": {
+        "title": "Företag",
+        "description": "Information om levererande enhet och redovisningsår"
+      },
+      "forsamlingar": {
+        "title": "Församlingar",
+        "description": "Ingående församlingar"
+      },
+      "gavor": {
+        "title": "Gåvor",
+        "description": "Redovisning av intäkter som har bokförts som gåvor"
+      },
+      "gavorader": {
+        "title": "Gåvorader",
+        "description": "Enskilda rader i redovisningen av gåvor"
+      },
+      "investeringar": {
+        "title": "Investeringar",
+        "description": "Redovisning av kostnader som har bokförts som investeringar"
+      },
+      "investeringsrader": {
+        "title": "Investeringsrader",
+        "description": "Enskilda rader i redovisningen av investeringar"
+      },
+      "leverantorsreskontra": {
+        "title": "Leveransreskontra",
+        "description": "Bokförda poster ordnade efter leverantör"
+      },
+      "saldon_multidim": {
+        "title": "Saldon",
+        "description": "Årlig in- och utbalans"
+      },
+      "verifikationsrader": {
+        "title": "Verifikationsrader",
+        "description": "Enskilda bokföringstransaktioner"
+      }
+    }
+  },
+  "lonehandlingar": {
+    "title_template": "Lönehandlingar - {unit_name}",
+    "description_template": "Arkiverade uttag från lönesystem",
+    "queries": {
+      "query1": {
+        "sql": "SELECT * FROM anstallningar LIMIT 10",
+        "title": "TEST-fråga - {unit_name}",
+        "description": "Det här är en testfråga som visar 10 anställningar."
+      }
+    },
+    "tables": {
+      "anstallningar": {
+        "title": "Anställningar",
+        "description": "Anställningar i {unit_name}",
+        "columns": {
+          "anstallning_id": {
+            "title": "Anställning-ID",
+            "description": "Unikt id för anställningen"
+          },
+          "arbetsgivare_id": {
+            "title": "Arbetsgivare-ID",
+            "description": "Unikt id för arbetsgivaren"
+          },
+          "personnummer": {
+            "title": "Personnummer",
+            "description": "Den anställdes personnummer"
+          },
+          "anstallningsnummer": {
+            "title": "Anställningsnummer",
+            "description": "Den anställdes anställningsnummer"
+          },
+          "utbetalningsgrupp_id": {
+            "title": "Anställningsgrupp-ID",
+            "description": "Unikt id för den anställdes utbetalningsgrupp"
+          },
+          "utbetalningsgrupp_namn": {
+            "title": "Utbetalningsgrupp",
+            "description": "Den utbetalningsgrupp som den anställde tillhör"
+          },
+          "personalkategori": {
+            "title": "Personalkategori",
+            "description": "Den asnställdes personalkategori"
+          },
+          "befattning": {
+            "title": "Befattning",
+            "description": "Den anställdes befattning"
+          },
+          "bksk_kod": {
+            "title": "BKSK-kod",
+            "description": "Anställningens BKSK-kod"
+          },
+          "bksk_klartext": {
+            "title": "BKSK",
+            "description": "Den BKSK som anställningen tillhör"
+          },
+          "befattningskod": {
+            "title": "Befattningskod",
+            "description": "Anställningens befattningskod"
+          },
+          "fornamn": {
+            "title": "Förnamn",
+            "description": "Den anställdes förnamn"
+          },
+          "efternamn": {
+            "title": "Efternamn",
+            "description": "Den anställdes efternamn"
+          },
+          "skyddad": {
+            "title": "Skyddad",
+            "description": "Fältet anger om den anställde har eller har haft skyddad identitet"
+          },
+          "nationalitet": {
+            "title": "Nationalitet",
+            "description": "Den anställdes nationalitet"
+          }
+        }
+      },
+      "anstallningsperioder": {
+        "title": "Anställningsperioder",
+        "description": "Information om perioder då en anställning har pågått."
+      },
+      "arbetsgivare": {
+        "title": "Arbetsgivare",
+        "description": "Information om arbetsgivaren"
+      },
+      "arbetsmatt_heltid": {
+        "title": "Arbetsmått - Heltid",
+        "description": "Arbetsmått motsvarande heltid för respektive anställning."
+      },
+      "formelvariabler": {
+        "title": "Formelvariabler",
+        "description": "De variabler som systemet använder för att göra uträkningar"
+      },
+      "kostnadsfordelningar": {
+        "title": "Kostnadsfördelningar",
+        "description": "Kostnadsfördelningar per anställning"
+      },
+      "lonearter": {
+        "title": "Lönearter",
+        "description": "Information om de lönearter som används i löneredovinsingen"
+      },
+      "lonekorningar": {
+        "title": "Lönekörningar",
+        "description": "Förteckning över månatliga lönekörningar inklusive lönespecifikationer."
+      },
+      "lonetillagg": {
+        "title": "Lönetillägg",
+        "description": "Information om lönetillägg kopplade till respektive anställning."
+      },
+      "lonetransaktion_konteringar": {
+        "title": "Lönetransaktioner - konteringar",
+        "description": "Enskilda konteringar per respektive lönetransaktion"
+      },
+      "lonetransaktioner": {
+        "title": "Lönetransaktioner",
+        "description": "Enskilda lönetransaktioner kopplade till anställning och lönekörning"
+      },
+      "manadsloner": {
+        "title": "Månadslöner",
+        "description": "Anställdas månadslöner motsvarande heltids sysselsättning"
+      },
+      "sysselsattningsgrader": {
+        "title": "Sysselsättningsgrader",
+        "description": "Anställdas sysselsättningsgrader i procent av heltid"
+      },
+      "timloner": {
+        "title": "Timlöner",
+        "description": "Information om anställdas timlöner"
+      }
+    }
+  }
+}

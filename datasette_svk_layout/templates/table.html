@@ -17,12 +17,22 @@
 {% block body_class %}table db-{{ database|to_css_class }} table-{{ table|to_css_class }}{% endblock %}
 
 {% block crumbs %}
-{{ crumbs.nav(request=request, database=database) }}
+{{ crumbs.nav(request=request, database=database, table=table) }}
 {% endblock %}
 
 {% block content %}
+{% set table_info = get_formatted_table_info(database, table) %}
 <div class="page-header" style="border-color: #{{ database_color(database) }}">
-    <h1>{{ metadata.title or table }}{% if is_view %} (view){% endif %}{% if private %}<span class="locked"> 🔒</span>{% endif %}</h1>
+    <h1>
+        {% if table_info.title != table %}
+            {{ table_info.title }}
+        {% elif metadata.databases and metadata.databases[database] and metadata.databases[database].tables and metadata.databases[database].tables[table] and metadata.databases[database].tables[table].title %}
+            {{ metadata.databases[database].tables[table].title }}
+        {% else %}
+            {{ table }}
+        {% endif %}
+        {% if is_view %} (vy){% endif %}{% if private %}<span class="locked"> 🔒</span>{% endif %}
+    </h1>
     {% set links = table_actions() %}{% if links %}
     <details class="actions-menu-links">
         <summary><svg aria-labelledby="actions-menu-links-title" role="img"
@@ -45,7 +55,18 @@
     </details>{% endif %}
 </div>
 
-{% block description_source_license %}{% include "_description_source_license.html" %}{% endblock %}
+{% block description_source_license %}
+{% set table_info = get_formatted_table_info(database, table) %}
+{% if table_info.description %}
+<div class="table-description">
+    <p>{{ table_info.description }}</p>
+</div>
+{% elif metadata.databases and metadata.databases[database] and metadata.databases[database].tables and metadata.databases[database].tables[table] and metadata.databases[database].tables[table].description %}
+<div class="table-description">
+    <p>{{ metadata.databases[database].tables[table].description }}</p>
+</div>
+{% endif %}
+{% endblock %}
 
 {% if metadata.columns %}
 <dl class="column-descriptions">
@@ -135,7 +156,7 @@
     <p><a class="not-underlined" title="{{ query.sql }}" href="{{ urls.database(database) }}?{{ {'sql': query.sql}|urlencode|safe }}{% if query.params %}&amp;{{ query.params|urlencode|safe }}{% endif %}">&#x270e; <span class="underlined">Visa och redigera SQL</span></a></p>
 {% endif %}
 
-<p class="export-links">Dessa data som {% for name, url in renderers.items() %}<a href="{{ url }}">{{ name }}</a>{{ ", " if not loop.last }}{% endfor %}{% if display_rows %}, <a href="{{ url_csv }}">CSV</a> (<a href="#export">advanced</a>){% endif %}</p>
+<p class="export-links">Dessa data som {% for name, url in renderers.items() %}<a href="{{ url }}">{% if name == "json" %}📋 {{ name }}{% else %}{{ name }}{% endif %}</a>{{ ", " if not loop.last }}{% endfor %}{% if display_rows %}, <a href="{{ url_csv }}">📊 CSV</a> (<a href="#export">advanced</a>){% endif %}</p>
 
 {% if suggested_facets %}
     {% include "_suggested_facets.html" %}
@@ -179,7 +200,7 @@
         </form>
     </div>
 {% endif %}
-
+<!--
 {% if table_definition %}
     <pre class="wrapped-sql">{{ table_definition }}</pre>
 {% endif %}
@@ -187,5 +208,6 @@
 {% if view_definition %}
     <pre class="wrapped-sql">{{ view_definition }}</pre>
 {% endif %}
+-->
 
 {% endblock %}
