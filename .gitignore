@@ -13,3 +13,5 @@ build
 *.db
 Färgkoder.png
 data/PERMISSIONS_EXAMPLE.md
+actor.json
+dev_plugins/

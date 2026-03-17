@@ -54,7 +54,7 @@
     </details>{% endif %}
     {% if actor %}
     <div class="actor">
-        <strong>{{ display_actor(actor) }}</strong>
+        <strong>{% if actor.first_name or actor.last_name %}{{ actor.first_name }} {{ actor.last_name }}{% else %}{{ display_actor(actor) }}{% endif %}</strong>
     </div>
     {% endif %}
 {% endblock %}</nav></header>
