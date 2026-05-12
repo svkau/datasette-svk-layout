@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ get_formatted_database_title(database) or "HR Personalsystem" }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.search-header {
+    background: var(--surface);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.search-header h1 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+}
+
+.search-form {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.search-form input[type="text"] {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.search-form button {
+    padding: 0.75rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-form button:hover {
+    background: var(--primary-dark);
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+
+    <div class="search-header">
+        <h1>{{ get_formatted_database_title(database) or "HR Personalsystem" }}</h1>
+        <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">
+            Sök på namn, personnummer eller anställningsnummer
+        </p>
+
+        <form class="search-form" action="{{ urls.query(database, 'Personer') }}" method="get">
+            <input
+                type="text"
+                name="text"
+                placeholder="Ange söktext..."
+                autofocus
+            >
+            <button type="submit">Sök</button>
+        </form>
+    </div>
+
+    <div class="no-results">
+        <p style="font-size: 1.2rem; margin: 0;">Ange söktext för att börja söka</p>
+    </div>
+
+</div>
+{% endblock %}
