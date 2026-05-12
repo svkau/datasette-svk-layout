@@ -122,11 +122,6 @@ def canned_queries(datasette, database, actor):
 
     return queries
 
-@hookimpl
-def database_actions(datasette, actor, database):
-    """Add database-specific actions based on database type configuration"""
-    # This could be used to add type-specific actions to database pages
-    return []
 
 def get_column_label(database_name, table_name, column_name):
     """Get column label from database_types.json configuration"""

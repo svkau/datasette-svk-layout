@@ -19,8 +19,7 @@
 {% block body_class %}db db-{{ database|to_css_class }}{% endblock %}
 
 {% block content %}
-<div class="page-header" style="border-color:0;">
-<!-- style="border-color: #{{ database_color(database) }}" -->
+<div class="page-header">
     <h1>
     {% set formatted_title = get_formatted_database_title(database) %}
     {% if formatted_title %}
