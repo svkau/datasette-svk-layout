@@ -5,7 +5,7 @@
 [![Tests](https://github.com/vitlais/datasette-svk-layout/actions/workflows/test.yml/badge.svg)](https://github.com/vitlais/datasette-svk-layout/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/vitlais/datasette-svk-layout/blob/main/LICENSE)
 
-Bsaic layout for SvK:s Datasette
+Basic layout for SvK's Datasette
 
 ## Installation
 

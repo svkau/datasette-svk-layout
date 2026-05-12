@@ -1,7 +1,7 @@
 [project]
 name = "datasette-svk-layout"
 version = "0.1"
-description = "Bsaic layout for SvK:s Datasette"
+description = "Basic layout for SvK's Datasette"
 readme = "README.md"
 authors = [{name = "Henrik Vitalis"}]
 license = "Apache-2.0"
