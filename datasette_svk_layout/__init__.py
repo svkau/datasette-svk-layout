@@ -293,7 +293,8 @@ class DatabaseTypeTemplateLoader(BaseLoader):
                 return self._try_load(environment, templates['database'])
         else:
             # Check per-name mapping first (e.g. templates.queries.Personer)
-            plural = prefix + 's' if not prefix.endswith('s') else prefix
+            plural_map = {'query': 'queries', 'row': 'rows', 'table': 'tables'}
+            plural = plural_map.get(prefix, prefix + 's')
             if item_name and plural in templates:
                 name_map = templates[plural]
                 if isinstance(name_map, dict) and item_name in name_map:
