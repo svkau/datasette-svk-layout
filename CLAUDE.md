@@ -173,7 +173,6 @@ Created a comprehensive configuration system for managing 500+ organizational da
 
 #### **Files Added/Modified**:
 - `data/database_types.json` - Central configuration for database types
-- `data/database_types_example.json` - Complete example with permissions
 - `datasette_svk_layout/__init__.py` - Enhanced with configuration system
 - `templates/database.html` - Updated to show dynamic queries and titles
 - `templates/index.html` - Updated to use database type configurations
@@ -308,8 +307,8 @@ Default values / standard templates
 ### 📁 Key Files
 
 #### Configuration:
-- `data/database_types.json` - Type-based configuration with template mappings
-- `data/units.json` - Organizational unit registry (orgnr → name mapping)
+- `datasette_svk_layout/data/database_types.json` - Type-based configuration with template mappings
+- `datasette_svk_layout/data/units.json` - Organizational unit registry (orgnr → name mapping)
 - `data/metadata.json` - Optional specific overrides
 
 #### Templates:

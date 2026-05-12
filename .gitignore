@@ -8,9 +8,11 @@ venv
 *.egg-info
 .DS_Store
 .vscode
+.idea/
 dist
 build
 *.db
+uv.lock
 Färgkoder.png
 data/PERMISSIONS_EXAMPLE.md
 actor.json
