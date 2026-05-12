@@ -1,0 +1,195 @@
+{% extends "query.html" %}
+
+{% block title %}Reseräkningar & Utlägg{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+
+    {% set anstallning_id = request.args.get('anstallning_id', '') %}
+
+    {# Hämta anställnings- och personuppgifter #}
+    {% set anstallning_query = sql("SELECT a.*, p.Namn as PersonNamn FROM Anstallning a LEFT JOIN Person p ON a.PersonId = p.Id WHERE a.Id = :id", {"id": anstallning_id}) %}
+    {% set anstallning = anstallning_query[0] if anstallning_query else None %}
+
+    {# Breadcrumb #}
+    <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+        <a href="{{ urls.database(database) }}">Sök anställd</a> /
+        {% if anstallning %}
+        <a href="{{ urls.row(database, 'Anstallning', anstallning_id) }}">{{ anstallning.PersonNamn or anstallning.Anstallningsnummer }}</a> /
+        {% endif %}
+        <span>Reseräkningar & Utlägg</span>
+    </nav>
+
+    {# Header #}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
+        <h1 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 2rem;">
+            Reseräkningar & Utlägg
+        </h1>
+        {% if anstallning %}
+        <p style="color: var(--text-secondary); margin: 0; font-size: 1.1rem;">
+            {{ anstallning.PersonNamn }} (Anst.nr: {{ anstallning.Anstallningsnummer or "—" }})
+        </p>
+        {% endif %}
+    </div>
+
+    {% if anstallning_id %}
+
+    {# Hämta alla reseräkningar #}
+    {% set reserakningar = sql("SELECT r.*, COUNT(ru.Id) as AntalUtlagg, SUM(ru.Totalbelopp) as TotalBelopp FROM Reserakning r LEFT JOIN ReserakningUtlagg ru ON r.Id = ru.ReserakningId WHERE r.AnstallningId = :anstallning_id GROUP BY r.Id ORDER BY r.CreatedDatumAndTid DESC", {"anstallning_id": anstallning_id}) %}
+
+    {# Sammanfattning #}
+    {% if reserakningar %}
+    {% set total_summa = sql("SELECT SUM(ru.Totalbelopp) as Total FROM ReserakningUtlagg ru INNER JOIN Reserakning r ON ru.ReserakningId = r.Id WHERE r.AnstallningId = :anstallning_id", {"anstallning_id": anstallning_id}) %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ reserakningar|length }}</div>
+            <div style="color: var(--text-secondary);">Reseräkningar</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ "%.2f"|format(total_summa[0].Total|float) if total_summa and total_summa[0].Total else "0.00" }} kr</div>
+            <div style="color: var(--text-secondary);">Totalt belopp</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Varje reseräkning som ett kort #}
+    {% if reserakningar %}
+        {% for rese in reserakningar %}
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; margin-bottom: 1.5rem; overflow: hidden;">
+
+            {# Reseräknings-header #}
+            <div style="background: var(--primary-color); color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.2rem;">
+                        Reseräkning #{{ rese.Reserakningsnummer or "—" }}
+                    </h3>
+                    <div style="opacity: 0.9; font-size: 0.9rem; margin-top: 0.25rem;">
+                        {{ rese.Arende or "Inget ärende angivet" }}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.3rem; font-weight: 700;">
+                        {{ "%.2f"|format(rese.TotalBelopp|float) if rese.TotalBelopp else "0.00" }} kr
+                    </div>
+                    <div style="font-size: 0.85rem; opacity: 0.9;">
+                        {% if rese.AvslagenByAnvandareId %}
+                        Avslagen
+                        {% elif rese.IsValid %}
+                        Giltig
+                        {% else %}
+                        Ej giltig
+                        {% endif %}
+                        | {{ rese.CreatedDatumAndTid[:10] if rese.CreatedDatumAndTid else "—" }}
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 1.5rem;">
+
+                {# Utlägg för denna reseräkning #}
+                {% set utlagg = sql("SELECT ru.*, u.Namn as UtlaggsTyp, u.Kod as UtlaggsKod FROM ReserakningUtlagg ru LEFT JOIN Utlagg u ON ru.UtlaggId = u.Id WHERE ru.ReserakningId = :rese_id ORDER BY ru.Datum, ru.Sorteringsordning", {"rese_id": rese.Id}) %}
+
+                {% if utlagg %}
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="margin: 0 0 0.75rem 0; color: var(--text-primary); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">{{ utlagg|length }}</span>
+                        Utlägg
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; line-height: 1.2;">
+                            <thead>
+                                <tr style="background: var(--background);">
+                                    <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Datum</th>
+                                    <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Typ</th>
+                                    <th style="padding: 0.25rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">Antal</th>
+                                    <th style="padding: 0.25rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">A-pris</th>
+                                    <th style="padding: 0.25rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">Belopp</th>
+                                    <th style="padding: 0.25rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">Moms</th>
+                                    <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Kommentar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in utlagg %}
+                                <tr>
+                                    <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color);">{{ u.Datum[:10] if u.Datum else "—" }}</td>
+                                    <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color);">{{ u.UtlaggsKod or "" }} {{ u.UtlaggsTyp or "—" }}</td>
+                                    <td style="padding: 0.2rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">{{ u.Antal if u.Antal else "—" }}</td>
+                                    <td style="padding: 0.2rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">{{ "%.2f"|format(u.Apris|float) if u.Apris else "—" }}</td>
+                                    <td style="padding: 0.2rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); font-weight: 500;">{{ "%.2f"|format(u.Totalbelopp|float) if u.Totalbelopp else "—" }}</td>
+                                    <td style="padding: 0.2rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">{{ "%.2f"|format(u.VaravMoms|float) if u.VaravMoms else "—" }}</td>
+                                    <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ u.Kommentar or '' }}">{{ u.Kommentar or "—" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <p style="color: var(--text-secondary); margin: 0 0 1.5rem 0; font-style: italic;">Inga utlägg registrerade.</p>
+                {% endif %}
+
+                {# Bilagor för denna reseräkning #}
+                {% set bilagor = sql("SELECT b.* FROM Bilaga b INNER JOIN ReserakningBilaga rb ON b.Id = rb.BilagaId WHERE rb.ReserakningId = :rese_id ORDER BY b.Tidpunkt", {"rese_id": rese.Id}) %}
+
+                {% if bilagor %}
+                <div>
+                    <h4 style="margin: 0 0 0.75rem 0; color: var(--text-primary); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="background: var(--secondary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">{{ bilagor|length }}</span>
+                        Bilagor & Kvitton
+                    </h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                        {% for bilaga in bilagor %}
+                        <a href="/{{ database }}/bilaga/{{ bilaga.Id }}"
+                           target="_blank"
+                           style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: var(--background); border: 1px solid var(--border-color); border-radius: 0.5rem; text-decoration: none; color: var(--text-primary); font-size: 0.85rem;">
+                            <span style="color: var(--primary-color);">
+                                {% if bilaga.Kontokortskvitto %}[Kvitto]{% endif %}
+                                {{ bilaga.Filnamn or "Bilaga" }}
+                            </span>
+                            <span style="color: var(--text-secondary); font-size: 0.8rem;">
+                                ({{ "%.0f"|format(bilaga.Filstorlek|float / 1024) if bilaga.Filstorlek else "?" }} KB)
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {# Avslagsmeddelande om det finns #}
+                {% if rese.MeddelandeAvslag %}
+                <div style="margin-top: 1rem; padding: 0.75rem; background: #fee; border: 1px solid var(--danger-color); border-radius: 0.5rem;">
+                    <strong style="color: var(--danger-color);">Avslagsmeddelande:</strong>
+                    <span style="color: var(--text-primary);">{{ rese.MeddelandeAvslag }}</span>
+                    {% if rese.TidAvslag %}
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">({{ rese.TidAvslag[:10] }})</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; text-align: center;">
+        <p style="color: var(--text-secondary); margin: 0;">Inga reseräkningar för denna anställning.</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; text-align: center;">
+        <p style="color: var(--text-secondary); margin: 0;">Ingen anställning vald. Gå till en anställning för att se reseräkningar.</p>
+    </div>
+    {% endif %}
+
+    {# Footer med länkar #}
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+        <p>
+            {% if anstallning %}
+            <a href="{{ urls.row(database, 'Anstallning', anstallning_id) }}" style="color: var(--primary-color); margin: 0 1rem;">Tillbaka till anställning</a>
+            {% endif %}
+            <a href="{{ urls.database(database) }}" style="color: var(--primary-color); margin: 0 1rem;">Sök anställd</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}

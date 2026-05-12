@@ -1,0 +1,249 @@
+{% extends "query.html" %}
+
+{% block title %}Tidsredovisning{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+
+    {% set anstallning_id = request.args.get('anstallning_id', '') %}
+
+    {# Hämta anställnings- och personuppgifter #}
+    {% set anstallning_query = sql("SELECT a.*, p.Namn as PersonNamn FROM Anstallning a LEFT JOIN Person p ON a.PersonId = p.Id WHERE a.Id = :id", {"id": anstallning_id}) %}
+    {% set anstallning = anstallning_query[0] if anstallning_query else None %}
+
+    {# Breadcrumb #}
+    <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+        <a href="{{ urls.database(database) }}">Sök anställd</a> /
+        {% if anstallning %}
+        <a href="{{ urls.row(database, 'Anstallning', anstallning_id) }}">{{ anstallning.PersonNamn or anstallning.Anstallningsnummer }}</a> /
+        {% endif %}
+        <span>Tidsredovisning</span>
+    </nav>
+
+    {# Header #}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
+        <h1 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 2rem;">
+            Tidsredovisning
+        </h1>
+        {% if anstallning %}
+        <p style="color: var(--text-secondary); margin: 0; font-size: 1.1rem;">
+            {{ anstallning.PersonNamn }} (Anst.nr: {{ anstallning.Anstallningsnummer or "—" }})
+        </p>
+        {% endif %}
+    </div>
+
+    {% if anstallning_id %}
+
+    {# Datumfilter #}
+    {% set from_date = request.args.get('from_date', '') %}
+    {% set to_date = request.args.get('to_date', '') %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem 1.5rem; margin-bottom: 2rem;">
+        <form method="get" action="{{ request.path }}" style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem;">
+            <input type="hidden" name="anstallning_id" value="{{ anstallning_id }}">
+            <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Från datum</label>
+                <input type="text" name="from_date" value="{{ from_date }}" placeholder="2026-05-04"
+                    pattern="\d{4}-\d{2}-\d{2}"
+                    style="padding: 0.5rem 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.95rem; width: 120px;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Till datum</label>
+                <input type="text" name="to_date" value="{{ to_date }}" placeholder="2026-05-04"
+                    pattern="\d{4}-\d{2}-\d{2}"
+                    style="padding: 0.5rem 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.95rem; width: 120px;">
+            </div>
+            <button type="submit"
+                style="padding: 0.5rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; font-size: 0.95rem; font-weight: 500; cursor: pointer;">
+                Filtrera
+            </button>
+            {% if from_date or to_date %}
+            <a href="{{ request.path }}?anstallning_id={{ anstallning_id }}"
+                style="padding: 0.5rem 1rem; color: var(--text-secondary); font-size: 0.9rem; text-decoration: none;">
+                Rensa filter
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    {# Sammanfattning #}
+    {% if from_date and to_date %}
+        {% set stats = sql("SELECT COUNT(*) as AntalDagar, SUM(CASE WHEN Granskad = 1 THEN 1 ELSE 0 END) as AntalGranskade, MIN(Datum) as ForstaDatum, MAX(Datum) as SenasteDatum FROM Tidrapportdag WHERE AnstallningId = :anstallning_id AND DATE(Datum) >= :from_date AND DATE(Datum) <= :to_date", {"anstallning_id": anstallning_id, "from_date": from_date, "to_date": to_date}) %}
+        {% set total_tidrader = sql("SELECT COUNT(*) as Antal FROM Tidrad tr INNER JOIN Tidrapportdag td ON tr.TidrapportdagId = td.Id WHERE td.AnstallningId = :anstallning_id AND DATE(td.Datum) >= :from_date AND DATE(td.Datum) <= :to_date", {"anstallning_id": anstallning_id, "from_date": from_date, "to_date": to_date}) %}
+    {% elif from_date %}
+        {% set stats = sql("SELECT COUNT(*) as AntalDagar, SUM(CASE WHEN Granskad = 1 THEN 1 ELSE 0 END) as AntalGranskade, MIN(Datum) as ForstaDatum, MAX(Datum) as SenasteDatum FROM Tidrapportdag WHERE AnstallningId = :anstallning_id AND DATE(Datum) >= :from_date", {"anstallning_id": anstallning_id, "from_date": from_date}) %}
+        {% set total_tidrader = sql("SELECT COUNT(*) as Antal FROM Tidrad tr INNER JOIN Tidrapportdag td ON tr.TidrapportdagId = td.Id WHERE td.AnstallningId = :anstallning_id AND DATE(td.Datum) >= :from_date", {"anstallning_id": anstallning_id, "from_date": from_date}) %}
+    {% elif to_date %}
+        {% set stats = sql("SELECT COUNT(*) as AntalDagar, SUM(CASE WHEN Granskad = 1 THEN 1 ELSE 0 END) as AntalGranskade, MIN(Datum) as ForstaDatum, MAX(Datum) as SenasteDatum FROM Tidrapportdag WHERE AnstallningId = :anstallning_id AND DATE(Datum) <= :to_date", {"anstallning_id": anstallning_id, "to_date": to_date}) %}
+        {% set total_tidrader = sql("SELECT COUNT(*) as Antal FROM Tidrad tr INNER JOIN Tidrapportdag td ON tr.TidrapportdagId = td.Id WHERE td.AnstallningId = :anstallning_id AND DATE(td.Datum) <= :to_date", {"anstallning_id": anstallning_id, "to_date": to_date}) %}
+    {% else %}
+        {% set stats = sql("SELECT COUNT(*) as AntalDagar, SUM(CASE WHEN Granskad = 1 THEN 1 ELSE 0 END) as AntalGranskade, MIN(Datum) as ForstaDatum, MAX(Datum) as SenasteDatum FROM Tidrapportdag WHERE AnstallningId = :anstallning_id", {"anstallning_id": anstallning_id}) %}
+        {% set total_tidrader = sql("SELECT COUNT(*) as Antal FROM Tidrad tr INNER JOIN Tidrapportdag td ON tr.TidrapportdagId = td.Id WHERE td.AnstallningId = :anstallning_id", {"anstallning_id": anstallning_id}) %}
+    {% endif %}
+
+    {% if stats and stats[0].AntalDagar > 0 %}
+    {% set s = stats[0] %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary-color);">{{ s.AntalDagar }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Dagar</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--success-color);">{{ s.AntalGranskade }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Granskade</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary-color);">{{ total_tidrader[0].Antal if total_tidrader else 0 }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Tidrader</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">{{ s.ForstaDatum[:10] if s.ForstaDatum else "—" }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Första datum</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">{{ s.SenasteDatum[:10] if s.SenasteDatum else "—" }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Senaste datum</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Hämta tidrapportdagar #}
+    {% if from_date and to_date %}
+        {% set tidrapportdagar = sql("SELECT t.*, COUNT(tr.Id) as AntalRader FROM Tidrapportdag t LEFT JOIN Tidrad tr ON t.Id = tr.TidrapportdagId WHERE t.AnstallningId = :anstallning_id AND DATE(t.Datum) >= :from_date AND DATE(t.Datum) <= :to_date GROUP BY t.Id ORDER BY t.Datum DESC", {"anstallning_id": anstallning_id, "from_date": from_date, "to_date": to_date}) %}
+    {% elif from_date %}
+        {% set tidrapportdagar = sql("SELECT t.*, COUNT(tr.Id) as AntalRader FROM Tidrapportdag t LEFT JOIN Tidrad tr ON t.Id = tr.TidrapportdagId WHERE t.AnstallningId = :anstallning_id AND DATE(t.Datum) >= :from_date GROUP BY t.Id ORDER BY t.Datum DESC", {"anstallning_id": anstallning_id, "from_date": from_date}) %}
+    {% elif to_date %}
+        {% set tidrapportdagar = sql("SELECT t.*, COUNT(tr.Id) as AntalRader FROM Tidrapportdag t LEFT JOIN Tidrad tr ON t.Id = tr.TidrapportdagId WHERE t.AnstallningId = :anstallning_id AND DATE(t.Datum) <= :to_date GROUP BY t.Id ORDER BY t.Datum DESC", {"anstallning_id": anstallning_id, "to_date": to_date}) %}
+    {% else %}
+        {% set tidrapportdagar = sql("SELECT t.*, COUNT(tr.Id) as AntalRader FROM Tidrapportdag t LEFT JOIN Tidrad tr ON t.Id = tr.TidrapportdagId WHERE t.AnstallningId = :anstallning_id GROUP BY t.Id ORDER BY t.Datum DESC LIMIT 100", {"anstallning_id": anstallning_id}) %}
+    {% endif %}
+
+    {# Varje tidrapportdag som ett kort #}
+    {% if tidrapportdagar %}
+        {% for dag in tidrapportdagar %}
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; margin-bottom: 1rem; overflow: hidden;">
+
+            {# Dag-header #}
+            <div style="background: var(--primary-color); color: white; padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h3 style="margin: 0; font-size: 1.1rem;">
+                        {{ dag.Datum[:10] if dag.Datum else "—" }}
+                    </h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        {% if dag.Granskad %}
+                        <span style="background: rgba(255,255,255,0.2); padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">Granskad</span>
+                        {% endif %}
+                        {% if dag.UtlagdEnligtSchema %}
+                        <span style="background: rgba(255,255,255,0.2); padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">Schema</span>
+                        {% endif %}
+                        {% if dag.HasErsattningsrader %}
+                        <span style="background: rgba(255,200,100,0.3); padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">Ersättning</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">
+                    {{ dag.AntalRader or 0 }} tidrader
+                </div>
+            </div>
+
+            {# Tidrader för denna dag #}
+            {% set tidrader = sql("SELECT tr.*, tk.Namn as TidkodNamn, tk.Kod as TidkodKod, substr(tr.FromKlockslag, 12, 5) as FromTid, substr(tr.TomKlockslag, 12, 5) as TomTid FROM Tidrad tr LEFT JOIN Tidkod tk ON tr.TidkodId = tk.Id WHERE tr.TidrapportdagId = :dag_id ORDER BY tr.FromKlockslag", {"dag_id": dag.Id}) %}
+
+            {% if tidrader %}
+            <div style="padding: 1rem 1.25rem;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; line-height: 1.2;">
+                    <thead>
+                        <tr style="background: var(--background);">
+                            <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color); width: 55px;">Från</th>
+                            <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color); width: 55px;">Till</th>
+                            <th style="padding: 0.25rem 0.5rem; text-align: center; border-bottom: 1px solid var(--border-color); width: 50px;">Tid</th>
+                            <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Tidkod</th>
+                            <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Kommentar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tr in tidrader %}
+                        <tr>
+                            <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color); font-family: monospace;">{{ tr.FromTid or "—" }}</td>
+                            <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color); font-family: monospace;">{{ tr.TomTid or "—" }}</td>
+                            <td style="padding: 0.2rem 0.5rem; text-align: center; border-bottom: 1px solid var(--border-color); font-family: monospace; color: var(--text-secondary);">{% if tr.FromTid and tr.TomTid %}{% set from_h = tr.FromTid[:2]|int %}{% set from_m = tr.FromTid[3:5]|int %}{% set to_h = tr.TomTid[:2]|int %}{% set to_m = tr.TomTid[3:5]|int %}{% set diff = (to_h * 60 + to_m) - (from_h * 60 + from_m) %}{% if diff > 0 %}{{ diff // 60 }}:{{ "%02d"|format(diff % 60) }}{% else %}—{% endif %}{% else %}—{% endif %}</td>
+                            <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color);">{% if tr.TidkodKod %}<span style="background: var(--primary-color); color: white; padding: 0.1rem 0.3rem; border-radius: 0.2rem; font-size: 0.75rem; margin-right: 0.4rem;">{{ tr.TidkodKod }}</span>{% endif %}{{ tr.TidkodNamn or "—" }}</td>
+                            <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ tr.InternKommentar or '' }}">{{ tr.InternKommentar or "—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding: 1rem 1.25rem; color: var(--text-secondary); font-style: italic;">
+                Inga tidrader registrerade.
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+        {% if tidrapportdagar|length == 100 and not from_date and not to_date %}
+        <p style="text-align: center; color: var(--text-secondary); font-style: italic;">
+            Visar de senaste 100 dagarna. Använd datumfiltret ovan för att se ett annat intervall.
+        </p>
+        {% endif %}
+
+    {% else %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; text-align: center;">
+        <p style="color: var(--text-secondary); margin: 0;">Ingen tidsredovisning för denna anställning.</p>
+    </div>
+    {% endif %}
+
+    {# Ackumulatorvärden #}
+    {% set ackum = sql("SELECT av.* FROM AnstallningAckumulatorvarde av WHERE av.AnstallningId = :anstallning_id ORDER BY av.FromDatum DESC LIMIT 50", {"anstallning_id": anstallning_id}) %}
+
+    {% if ackum %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; margin-top: 2rem;">
+        <h2 style="margin: 0 0 1rem 0; color: var(--primary-color); font-size: 1.2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+            Ackumulatorvärden ({{ ackum|length }}{% if ackum|length == 50 %}+{% endif %})
+        </h2>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead>
+                    <tr style="background: var(--background);">
+                        <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Period</th>
+                        <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Ackumulator</th>
+                        <th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">Ingående</th>
+                        <th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">Period</th>
+                        <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Ändrad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in ackum %}
+                    <tr>
+                        <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ a.FromDatum[:10] if a.FromDatum else "—" }} – {{ a.TomDatum[:10] if a.TomDatum else "—" }}</td>
+                        <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); font-family: monospace; font-size: 0.8rem;">{{ a.AckumulatorId[:8] if a.AckumulatorId else "—" }}...</td>
+                        <td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); font-weight: 500;">{{ "%.2f"|format(a.IngaendeVarde|float) if a.IngaendeVarde is not none else "—" }}</td>
+                        <td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); font-weight: 500;">{{ "%.2f"|format(a.Periodvarde|float) if a.Periodvarde is not none else "—" }}</td>
+                        <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ a.AndradTidpunkt[:10] if a.AndradTidpunkt else "—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; text-align: center;">
+        <p style="color: var(--text-secondary); margin: 0;">Ingen anställning vald. Gå till en anställning för att se tidsredovisning.</p>
+    </div>
+    {% endif %}
+
+    {# Footer med länkar #}
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+        <p>
+            {% if anstallning %}
+            <a href="{{ urls.row(database, 'Anstallning', anstallning_id) }}" style="color: var(--primary-color); margin: 0 1rem;">Tillbaka till anställning</a>
+            {% endif %}
+            <a href="{{ urls.database(database) }}" style="color: var(--primary-color); margin: 0 1rem;">Sök anställd</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}

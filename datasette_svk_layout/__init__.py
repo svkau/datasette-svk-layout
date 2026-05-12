@@ -3,6 +3,7 @@ import os
 import re
 from pathlib import Path
 from datasette import hookimpl
+from datasette.utils.asgi import Response
 import copy
 from jinja2 import ChoiceLoader, FileSystemLoader, PrefixLoader, TemplateNotFound
 from jinja2.loaders import BaseLoader
@@ -151,7 +152,7 @@ def get_query_description(datasette, database_name, query_name):
     return None
 
 @hookimpl
-def extra_template_vars(datasette):
+def extra_template_vars(datasette, database):
     """Add template functions for unit name lookups and database configuration"""
     # Clear caches to reload configuration on each request (for development)
     clear_caches()
@@ -160,7 +161,16 @@ def extra_template_vars(datasette):
     def get_query_desc(database_name, query_name):
         return get_query_description(datasette, database_name, query_name)
 
+    async def sql(query, params=None):
+        """Execute SQL in templates. Requires Jinja2 async mode (used by Datasette)."""
+        if database:
+            db = datasette.get_database(database)
+            result = await db.execute(query, params or {})
+            return [dict(row) for row in result.rows]
+        return []
+
     return {
+        "sql": sql,
         "get_unit_name": get_unit_name,
         "extract_orgnr": extract_orgnr,
         "get_database_type": get_database_type,
@@ -257,62 +267,71 @@ class DatabaseTypeTemplateLoader(BaseLoader):
     def __init__(self, fallback_loader):
         self.fallback_loader = fallback_loader
 
+    def _try_load(self, environment, template_name):
+        """Try to load a template, return None if not found."""
+        try:
+            return self.fallback_loader.get_source(environment, template_name)
+        except TemplateNotFound:
+            return None
+
+    def _resolve_type_template(self, environment, db_name, prefix, item_name=None):
+        """
+        Resolve a type-specific template for a database.
+
+        For 'database' prefix: checks templates.database
+        For 'query'/'table'/'row' prefix: checks templates.queries/tables/rows dict
+        for per-name mapping first, then falls back to templates.query/table/row.
+        """
+        db_config = get_database_config(db_name)
+        if not db_config or 'templates' not in db_config:
+            return None
+
+        templates = db_config['templates']
+
+        if prefix == 'database':
+            if 'database' in templates:
+                return self._try_load(environment, templates['database'])
+        else:
+            # Check per-name mapping first (e.g. templates.queries.Personer)
+            plural = prefix + 's' if not prefix.endswith('s') else prefix
+            if item_name and plural in templates:
+                name_map = templates[plural]
+                if isinstance(name_map, dict) and item_name in name_map:
+                    result = self._try_load(environment, name_map[item_name])
+                    if result:
+                        return result
+
+            # Fall back to generic type template (e.g. templates.query)
+            singular = prefix.rstrip('s') if prefix.endswith('s') else prefix
+            if singular in templates:
+                return self._try_load(environment, templates[singular])
+
+        return None
+
     def get_source(self, environment, template):
         """
         Intercept template loading and redirect to type-specific templates when configured.
+
+        Handles: database-{db}.html, table-{db}-{name}.html, query-{db}-{name}.html, row-{db}-{name}.html
         """
-        # Check if this is a database-specific template
-        # Pattern: database-{dbname}.html, table-{dbname}-{tablename}.html, query-{dbname}-{queryname}.html
+        for prefix in ('database', 'table', 'query', 'row'):
+            tag = prefix + '-'
+            if template.startswith(tag) and template.endswith('.html'):
+                inner = template[len(tag):-5]
 
-        if template.startswith('database-') and template.endswith('.html'):
-            # Extract database name from template
-            db_name = template[9:-5]  # Remove 'database-' and '.html'
+                if prefix == 'database':
+                    result = self._resolve_type_template(environment, inner, 'database')
+                else:
+                    parts = inner.split('-', 1)
+                    if len(parts) == 2:
+                        db_name, item_name = parts
+                        result = self._resolve_type_template(environment, db_name, prefix, item_name)
+                    else:
+                        result = None
 
-            # Get database type configuration
-            db_type = get_database_type(db_name)
-            db_config = get_database_config(db_name)
-
-            if db_config and 'templates' in db_config and 'database' in db_config['templates']:
-                # Try to load the type-specific template
-                type_template = db_config['templates']['database']
-                try:
-                    return self.fallback_loader.get_source(environment, type_template)
-                except TemplateNotFound:
-                    pass  # Fall through to default behavior
-
-        elif template.startswith('table-') and template.endswith('.html'):
-            # Extract database and table name from template
-            # Format: table-{dbname}-{tablename}.html
-            parts = template[6:-5].split('-', 1)  # Remove 'table-' and '.html', split on first dash
-            if len(parts) == 2:
-                db_name, table_name = parts
-
-                db_type = get_database_type(db_name)
-                db_config = get_database_config(db_name)
-
-                if db_config and 'templates' in db_config and 'table' in db_config['templates']:
-                    type_template = db_config['templates']['table']
-                    try:
-                        return self.fallback_loader.get_source(environment, type_template)
-                    except TemplateNotFound:
-                        pass
-
-        elif template.startswith('query-') and template.endswith('.html'):
-            # Extract database and query name from template
-            # Format: query-{dbname}-{queryname}.html
-            parts = template[6:-5].split('-', 1)  # Remove 'query-' and '.html', split on first dash
-            if len(parts) == 2:
-                db_name, query_name = parts
-
-                db_type = get_database_type(db_name)
-                db_config = get_database_config(db_name)
-
-                if db_config and 'templates' in db_config and 'query' in db_config['templates']:
-                    type_template = db_config['templates']['query']
-                    try:
-                        return self.fallback_loader.get_source(environment, type_template)
-                    except TemplateNotFound:
-                        pass
+                if result:
+                    return result
+                break
 
         # Fall back to default loader
         return self.fallback_loader.get_source(environment, template)
@@ -329,3 +348,94 @@ def prepare_jinja2_environment(env):
     """
     # Wrap the existing loader with our custom loader
     env.loader = DatabaseTypeTemplateLoader(env.loader)
+
+
+# === Document serving ===
+
+def detect_content_type(data):
+    """Detect file type from content (magic bytes)."""
+    if not data:
+        return "application/octet-stream", ".bin"
+    if data[:4] == b'%PDF':
+        return "application/pdf", ".pdf"
+    elif data[:8] == b'\x89PNG\r\n\x1a\n':
+        return "image/png", ".png"
+    elif data[:2] == b'\xff\xd8':
+        return "image/jpeg", ".jpg"
+    elif data[:4] == b'GIF8':
+        return "image/gif", ".gif"
+    elif data[:2] == b'PK':
+        if b'word/' in data[:2000]:
+            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".docx"
+        elif b'xl/' in data[:2000]:
+            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"
+        elif b'ppt/' in data[:2000]:
+            return "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".pptx"
+        return "application/zip", ".zip"
+    elif data[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1':
+        return "application/msword", ".doc"
+    return "application/octet-stream", ".bin"
+
+
+async def _serve_blob(datasette, request, table, id_column, file_column, name_column, not_found_msg):
+    """Shared logic for serving binary blobs from database tables."""
+    database = request.url_vars["database"]
+    row_id = request.url_vars["doc_id"] if "doc_id" in request.url_vars else request.url_vars["bilaga_id"]
+
+    db = datasette.get_database(database)
+    result = await db.execute(
+        f"SELECT [{file_column}], [{name_column}] FROM [{table}] WHERE [{id_column}] = :id",
+        {"id": row_id}
+    )
+    row = result.first()
+
+    if not row or not row[file_column]:
+        return Response.text(not_found_msg, status=404)
+
+    fil_data = row[file_column]
+    if not isinstance(fil_data, bytes):
+        fil_data = bytes(fil_data)
+
+    original_filnamn = row[name_column] or "dokument"
+    content_type, ext = detect_content_type(fil_data)
+    base_name = os.path.splitext(original_filnamn)[0]
+    filnamn = base_name + ext
+
+    inline_types = ["application/pdf", "image/png", "image/jpeg", "image/gif"]
+    disposition = "inline" if content_type in inline_types else "attachment"
+
+    return Response(
+        body=fil_data,
+        status=200,
+        headers={
+            "Content-Type": content_type,
+            "Content-Disposition": f'{disposition}; filename="{filnamn}"',
+        },
+        content_type=content_type,
+    )
+
+
+async def serve_document(scope, receive, datasette, request):
+    return await _serve_blob(
+        datasette, request,
+        table="AnstallningDokument", id_column="Id",
+        file_column="Fil", name_column="Filnamn",
+        not_found_msg="Dokument hittades inte"
+    )
+
+
+async def serve_bilaga(scope, receive, datasette, request):
+    return await _serve_blob(
+        datasette, request,
+        table="Bilaga", id_column="Id",
+        file_column="Fil", name_column="Filnamn",
+        not_found_msg="Bilaga hittades inte"
+    )
+
+
+@hookimpl
+def register_routes():
+    return [
+        (r"^/(?P<database>[^/]+)/dokument/(?P<doc_id>[^/]+)$", serve_document),
+        (r"^/(?P<database>[^/]+)/bilaga/(?P<bilaga_id>[^/]+)$", serve_bilaga),
+    ]

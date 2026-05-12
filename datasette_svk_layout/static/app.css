@@ -22,6 +22,21 @@
     --svk-background-light: #FAFBFC;
     --svk-border: rgba(45,43,114,0.15);
     --svk-shadow: rgba(125,0,55,0.1);
+
+    /* Generic aliases for type-specific templates */
+    --primary-color: var(--svk-dark-blue);
+    --primary-dark: #1e1d5c;
+    --secondary-color: var(--svk-green);
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --background: var(--svk-background-light);
+    --surface: #ffffff;
+    --text-primary: var(--svk-text-dark);
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --shadow: 0 1px 3px 0 var(--svk-shadow);
+    --shadow-lg: 0 10px 15px -3px var(--svk-shadow);
 }
 
 /* Reset and Page Setup ==================================================== */

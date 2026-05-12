@@ -1,0 +1,121 @@
+{% extends "row.html" %}
+
+{% block title %}Anställning {{ display_rows[0].Anstallningsnummer or display_rows[0].Id }}{% endblock %}
+
+{% block content %}
+{% set row = display_rows[0] %}
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+
+    {# Hämta personuppgifter #}
+    {% set person_query = sql("SELECT * FROM Person WHERE Id = :person_id", {"person_id": row.PersonId}) %}
+    {% set person = person_query[0] if person_query else None %}
+
+    {# Breadcrumb #}
+    <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+        <a href="{{ urls.database(database) }}">Sök anställd</a> /
+        <span>{{ person.Namn if person else row.Anstallningsnummer or row.Id }}</span>
+    </nav>
+
+    {# Header med personinformation #}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
+        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 2rem;">
+            <div style="flex: 1; min-width: 300px;">
+                <h1 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 2rem;">
+                    {{ person.Namn if person else "Okänd person" }}
+                </h1>
+                <p style="color: var(--text-secondary); margin: 0 0 1rem 0; font-size: 1.1rem;">
+                    Anställningsnummer: <strong>{{ row.Anstallningsnummer or "—" }}</strong>
+                </p>
+                {% if person %}
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Personnummer</span>
+                        <div style="font-weight: 500;">{{ person.Personnummer or "—" }}</div>
+                    </div>
+                    {% if person.EpostArbete %}
+                    <div>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">E-post arbete</span>
+                        <div style="font-weight: 500;"><a href="mailto:{{ person.EpostArbete }}" style="color: var(--primary-color);">{{ person.EpostArbete }}</a></div>
+                    </div>
+                    {% endif %}
+                    {% if person.Telefon1 %}
+                    <div>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Telefon</span>
+                        <div style="font-weight: 500;">{{ person.Telefon1 }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Dokument #}
+    {% set dokument_query = sql("SELECT d.*, k.Namn as KategoriNamn FROM AnstallningDokument d LEFT JOIN AnstallningDokumentKategori k ON d.KategoriId = k.Id WHERE d.AnstallningId = :anstallning_id ORDER BY d.Tidpunkt DESC", {"anstallning_id": row.Id}) %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem;">
+        <h2 style="margin: 0 0 1.5rem 0; color: var(--primary-color); font-size: 1.3rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+            Dokument ({{ dokument_query|length if dokument_query else 0 }})
+        </h2>
+        {% if dokument_query %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; line-height: 1.1;">
+                <thead>
+                    <tr>
+                        <th style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; text-align: left;">Rubrik</th>
+                        <th style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; text-align: left;">Kategori</th>
+                        <th style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; text-align: left;">Filnamn</th>
+                        <th style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; text-align: left;">Datum</th>
+                        <th style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; text-align: left;">Storlek</th>
+                        <th style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; text-align: center;">Öppna</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dok in dokument_query %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 0.15rem 0.5rem;">{{ dok.Rubrik or "—" }}</td>
+                        <td style="padding: 0.15rem 0.5rem;">{{ dok.KategoriNamn or "—" }}</td>
+                        <td style="padding: 0.15rem 0.5rem;">{{ dok.Filnamn or "—" }}</td>
+                        <td style="padding: 0.15rem 0.5rem;">{{ dok.Tidpunkt[:10] if dok.Tidpunkt else "—" }}</td>
+                        <td style="padding: 0.15rem 0.5rem;">{{ "%.1f"|format(dok.Filstorlek|float / 1024) if dok.Filstorlek else "—" }} KB</td>
+                        <td style="padding: 0.15rem 0.5rem; text-align: center;">{% if dok.Fil %}<a href="/{{ database }}/dokument/{{ dok.Id }}" target="_blank" style="color: var(--primary-color);">Öppna</a>{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary); margin: 0;">Inga dokument kopplade till denna anställning.</p>
+        {% endif %}
+    </div>
+
+    {# Länkar till detaljsidor #}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <a href="{{ urls.query(database, 'AnstallningReserakningar') }}?anstallning_id={{ row.Id }}"
+           style="display: block; background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; text-decoration: none; transition: box-shadow 0.2s;">
+            <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color); font-size: 1.2rem;">
+                Reseräkningar & Utlägg
+            </h3>
+            <p style="margin: 0; color: var(--text-secondary);">
+                Visa alla reseräkningar och utlägg för denna anställning
+            </p>
+        </a>
+        <a href="{{ urls.query(database, 'AnstallningTidsredovisning') }}?anstallning_id={{ row.Id }}"
+           style="display: block; background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; text-decoration: none; transition: box-shadow 0.2s;">
+            <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color); font-size: 1.2rem;">
+                Tidsredovisning
+            </h3>
+            <p style="margin: 0; color: var(--text-secondary);">
+                Visa tidrapporter och redovisade timmar för denna anställning
+            </p>
+        </a>
+    </div>
+
+    {# Footer med länkar #}
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+        <p>
+            <a href="{{ urls.database(database) }}" style="color: var(--primary-color); margin: 0 1rem;">Sök anställd</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}

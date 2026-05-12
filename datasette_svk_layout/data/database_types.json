@@ -389,5 +389,37 @@
         "description": "Information om anställdas timlöner"
       }
     }
+  },
+  "hrm": {
+    "title_template": "HR Personalsystem - {unit_name}",
+    "description_template": "Arkiverade data från personalsystemet",
+    "templates": {
+      "database": "database-hrm-type.html",
+      "queries": {
+        "Personer": "query-hrm-type-Personer.html",
+        "AnstallningReserakningar": "query-hrm-type-AnstallningReserakningar.html",
+        "AnstallningTidsredovisning": "query-hrm-type-AnstallningTidsredovisning.html"
+      },
+      "rows": {
+        "Anstallning": "row-hrm-type-Anstallning.html"
+      }
+    },
+    "queries": {
+      "Personer": {
+        "sql": "SELECT a.Namn, a.Personnummer, b.Anstallningsnummer AS Anställningsnummer, a.Id AS PersonID, b.Id AS AnställningID FROM Person AS a INNER JOIN Anstallning AS b ON a.Id = b.PersonId WHERE a.Namn LIKE '%' || :text || '%' OR a.Personnummer LIKE '%' || :text || '%' OR b.Anstallningsnummer LIKE '%' || :text || '%' ORDER BY Efternamn",
+        "title": "Sök anställd",
+        "hide_sql": true
+      },
+      "AnstallningReserakningar": {
+        "sql": "SELECT 1",
+        "title": "Reseräkningar & Utlägg",
+        "hide_sql": true
+      },
+      "AnstallningTidsredovisning": {
+        "sql": "SELECT 1",
+        "title": "Tidsredovisning",
+        "hide_sql": true
+      }
+    }
   }
 }
