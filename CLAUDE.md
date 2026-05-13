@@ -62,9 +62,9 @@ Manages 500+ organizational databases. Database names follow pattern `{type}_{or
 
 | Type | Template prefix | Description |
 |------|----------------|-------------|
+| `Public_360` | — | Public 360 |
 | `aveny` | `database-aveny-type` | Ekonomihandlingar |
 | `lonehandlingar` | — | Lonehandlingar |
-| `vips` | — | Vips Online |
 | `hrm` | `database-hrm-type`, `query-hrm-type-*`, `row-hrm-type-*` | HR Personalsystem med personsok, reserakningar, tidsredovisning och dokumentservering |
 
 HRM-typen har per-query och per-row template-mappningar i `database_types.json` under `templates.queries` och `templates.rows`.
@@ -124,5 +124,5 @@ python -m datasette_svk_layout.migrate_metadata [metadata_path] [db_path]
 ## Future Work
 
 - ADFS integration for user-specific database filtering
-- Additional database type configurations (vips, etc.)
+- Additional database type configurations
 - CSS: app.css defines `--svk-*` brand variables and generic aliases (`--primary-color` etc.) for type-specific templates

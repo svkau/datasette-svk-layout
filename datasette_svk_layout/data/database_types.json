@@ -1,7 +1,7 @@
 {
-  "vips": {
-    "title_template": "Vips Online - {unit_name}",
-    "description_template": "Arkiverade insatser m.m. från Vips Online"
+  "Public_360": {
+    "title_template": "Public 360 - {unit_name}",
+    "description_template": ""
   },
   "aveny": {
     "title_template": "Ekonomihandlingar - {unit_name}",
@@ -11,6 +11,12 @@
     },
     "queries": {
       "query1": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "sql": "SELECT * FROM budgetar LIMIT 10",
         "title": "Leverantörer",
         "description": "Specialrapport med översikt över leverantörer"
@@ -18,6 +24,12 @@
     },
     "tables": {
       "Kundreskontra": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Kundreskontra",
         "description": "Bokföringstransaktioner ordnade efter kunder",
         "columns": {
@@ -104,6 +116,12 @@
         }
       },
       "anlaggningar_dokument": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Anläggningar - dokument",
         "description": "Dokument kopplade till transaktioner avseende anläggningar",
         "columns": {
@@ -134,6 +152,12 @@
         }
       },
       "anlaggningar_inventarier": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Anläggningar - inventarier",
         "description": "Förteckning över inventarier",
          "columns": {
@@ -160,22 +184,52 @@
          }
       },
       "anlaggningar_inventarier_fakturabilder": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Fakturabilder",
         "description": "Fakturor kopplade till anläggningar och inventarier"
       },
       "baskonton": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Baskonton",
         "description": "Kontoplan över baskonton"
       },
       "bokforingsjournaler": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Bokföringsjournaler",
         "description": "Förteckning över bokföringsjournaler"
       },
       "bokforingsverifikationer": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Bokföringsverifikationer",
         "description": "Förteckning över verifikationer"
       },
       "budgetar": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Budgetar",
         "description": "Förteckning över budgetar",
         "columns": {
@@ -205,55 +259,143 @@
           }
         }
       },
+      "budgetsammanfattning": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
+        "title": "Budgetsammanfattning",
+        "description": "Sammanfattning av antal budgetar per bokföringsår och kategori"
+      },
       "budgetrader": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Budgetrader",
         "description": "Enskilda budgetrader"
       },
       "budgetverifikationer": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Budgetverifikationer",
         "description": "Budgetverifikationer"
       },
       "dimensioner": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Dimensioner",
         "description": "Lista över de dimensioner som används"
       },
       "exportfil": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Exportfil",
         "description": "Information om arkivleveranser från ekonomisystemet"
       },
       "foretag_ar": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Företag",
         "description": "Information om levererande enhet och redovisningsår"
       },
       "forsamlingar": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Församlingar",
         "description": "Ingående församlingar"
       },
       "gavor": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Gåvor",
         "description": "Redovisning av intäkter som har bokförts som gåvor"
       },
       "gavorader": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Gåvorader",
         "description": "Enskilda rader i redovisningen av gåvor"
       },
       "investeringar": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Investeringar",
         "description": "Redovisning av kostnader som har bokförts som investeringar"
       },
       "investeringsrader": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Investeringsrader",
         "description": "Enskilda rader i redovisningen av investeringar"
       },
       "leverantorsreskontra": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Leveransreskontra",
         "description": "Bokförda poster ordnade efter leverantör"
       },
       "saldon_multidim": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Saldon",
         "description": "Årlig in- och utbalans"
       },
       "verifikationsrader": {
+        "allow": {
+          "permissions": [
+            "access.search_economics",
+            "access.search_everything"
+          ]
+        },
         "title": "Verifikationsrader",
         "description": "Enskilda bokföringstransaktioner"
       }
@@ -264,6 +406,12 @@
     "description_template": "Arkiverade uttag från lönesystem",
     "queries": {
       "query1": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "sql": "SELECT * FROM anstallningar LIMIT 10",
         "title": "TEST-fråga - {unit_name}",
         "description": "Det här är en testfråga som visar 10 anställningar."
@@ -271,6 +419,12 @@
     },
     "tables": {
       "anstallningar": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Anställningar",
         "description": "Anställningar i {unit_name}",
         "columns": {
@@ -337,54 +491,132 @@
         }
       },
       "anstallningsperioder": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Anställningsperioder",
         "description": "Information om perioder då en anställning har pågått."
       },
       "arbetsgivare": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Arbetsgivare",
         "description": "Information om arbetsgivaren"
       },
       "arbetsmatt_heltid": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Arbetsmått - Heltid",
         "description": "Arbetsmått motsvarande heltid för respektive anställning."
       },
       "formelvariabler": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Formelvariabler",
         "description": "De variabler som systemet använder för att göra uträkningar"
       },
       "kostnadsfordelningar": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Kostnadsfördelningar",
         "description": "Kostnadsfördelningar per anställning"
       },
       "lonearter": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Lönearter",
         "description": "Information om de lönearter som används i löneredovinsingen"
       },
       "lonekorningar": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Lönekörningar",
         "description": "Förteckning över månatliga lönekörningar inklusive lönespecifikationer."
       },
       "lonetillagg": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Lönetillägg",
         "description": "Information om lönetillägg kopplade till respektive anställning."
       },
       "lonetransaktion_konteringar": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Lönetransaktioner - konteringar",
         "description": "Enskilda konteringar per respektive lönetransaktion"
       },
       "lonetransaktioner": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Lönetransaktioner",
         "description": "Enskilda lönetransaktioner kopplade till anställning och lönekörning"
       },
       "manadsloner": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Månadslöner",
         "description": "Anställdas månadslöner motsvarande heltids sysselsättning"
       },
       "sysselsattningsgrader": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Sysselsättningsgrader",
         "description": "Anställdas sysselsättningsgrader i procent av heltid"
       },
       "timloner": {
+        "allow": {
+          "permissions": [
+            "access.search_salaries",
+            "access.search_everything"
+          ]
+        },
         "title": "Timlöner",
         "description": "Information om anställdas timlöner"
       }
