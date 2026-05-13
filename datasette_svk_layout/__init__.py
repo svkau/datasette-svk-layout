@@ -281,11 +281,11 @@ def permission_allowed(datasette, actor, action, resource):
                     if isinstance(allowed, bool):
                         return allowed
 
-                    # If it's a list of roles, check if actor has required roles
+                    # If it's a list of permissions, check if actor has required ones
                     if isinstance(allowed, list) and actor:
-                        actor_roles = actor.get('roles', [])
-                        # User needs at least one of the allowed roles
-                        return any(role in allowed for role in actor_roles)
+                        actor_permissions = actor.get('permissions', [])
+                        # User needs at least one of the allowed permissions
+                        return any(perm in allowed for perm in actor_permissions)
 
                     # If configured but actor is None, deny access
                     if isinstance(allowed, list) and not actor:

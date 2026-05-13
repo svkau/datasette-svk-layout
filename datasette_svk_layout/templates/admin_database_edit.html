@@ -43,20 +43,22 @@
 
     <fieldset>
         <legend>Behörigheter</legend>
-        <p class="form-help">Ange roller separerade med komma. Lämna tomt för att inte sätta behörighet (faller tillbaka till metadata.json eller database_types.json).</p>
+        <p class="form-help">Lämna tomt för att inte sätta behörighet (faller tillbaka till metadata.json eller database_types.json).</p>
 
         <div class="form-group">
-            <label for="perm_view-database_roles">view-database (roller)</label>
-            <input type="text" id="perm_view-database_roles" name="perm_view-database_roles"
-                   value="{{ permissions.get('view-database', {}).get('roles', []) | join(', ') }}"
-                   class="form-control" placeholder="t.ex. arkivarie, hr-admin">
+            <label for="perm_view-database_organisations_ids">view-database (organisations-ID)</label>
+            <input type="text" id="perm_view-database_organisations_ids" name="perm_view-database_organisations_ids"
+                   value="{{ permissions.get('view-database', {}).get('organisations_ids', []) | join(', ') }}"
+                   class="form-control" placeholder="t.ex. 510, 3792">
+            <small class="form-text">Ange organisations-ID separerade med komma. Matchar mot actorns organisations_ids.</small>
         </div>
 
         <div class="form-group">
-            <label for="perm_execute-sql_roles">execute-sql (roller)</label>
-            <input type="text" id="perm_execute-sql_roles" name="perm_execute-sql_roles"
-                   value="{{ permissions.get('execute-sql', {}).get('roles', []) | join(', ') }}"
-                   class="form-control" placeholder="t.ex. arkivarie, admin">
+            <label for="perm_execute-sql_permissions">execute-sql (behörigheter)</label>
+            <input type="text" id="perm_execute-sql_permissions" name="perm_execute-sql_permissions"
+                   value="{{ permissions.get('execute-sql', {}).get('permissions', []) | join(', ') }}"
+                   class="form-control" placeholder="t.ex. access.search_admin">
+            <small class="form-text">Ange behörigheter separerade med komma. Matchar mot actorns permissions.</small>
         </div>
     </fieldset>
 
