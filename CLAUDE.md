@@ -24,14 +24,15 @@ datasette data/*.db --metadata data/metadata.json --plugins-dir dev_plugins/
 - **Entry point**: `svk_layout` in `pyproject.toml` -> `datasette_svk_layout` module
 - **Templates**: Jinja2 overrides in `datasette_svk_layout/templates/`
 - **Static assets**: CSS/JS in `datasette_svk_layout/static/`
-- **Plugin hooks** in `__init__.py`: `canned_queries`, `extra_template_vars`, `permission_allowed`, `prepare_jinja2_environment`, `register_routes`
+- **Plugin hooks** in `__init__.py`: `startup`, `get_metadata`, `canned_queries`, `extra_template_vars`, `permission_allowed`, `prepare_jinja2_environment`, `register_routes`
 
-### Three-layer Configuration System
+### Configuration System
 
 Resolution priority (highest first):
 1. `data/metadata.json` - Specific overrides for individual databases/tables
-2. `datasette_svk_layout/data/database_types.json` - Shared config per database type
-3. Default Datasette templates
+2. `data/svk_metadata.db` - SQLite-databas med databas-nivå metadata och behörigheter (injiceras via `get_metadata` hook)
+3. `datasette_svk_layout/data/database_types.json` - Shared config per database type
+4. Default Datasette templates
 
 ### Database Type System
 
@@ -51,6 +52,10 @@ Manages 500+ organizational databases. Database names follow pattern `{type}_{or
 | `datasette_svk_layout/data/database_types.json` | Type-based config with template mappings |
 | `datasette_svk_layout/data/units.json` | Org unit registry (orgnr -> name) |
 | `data/metadata.json` | Datasette metadata for specific databases |
+| `data/svk_metadata.db` | SQLite metadata store (databas-nivå, skapas automatiskt) |
+| `datasette_svk_layout/metadata_db.py` | MetadataDB-klass: schema, CRUD, allow-dict assemblering, cache |
+| `datasette_svk_layout/admin_routes.py` | Admin-UI route handlers med behörighetskontroll |
+| `datasette_svk_layout/migrate_metadata.py` | Migreringsskript för import från metadata.json |
 | `dev_plugins/dev_mock_actor.example.py` | Mock actor plugin for local development |
 
 ### Database Types
@@ -78,6 +83,38 @@ HRM-typen har per-query och per-row template-mappningar i `database_types.json` 
 - `/{database}/bilaga/{id}` - Serve attachments from `Bilaga` table
 
 Auto-detects content type from magic bytes (PDF, images, Office docs).
+
+### SQLite Metadata Database
+
+`data/svk_metadata.db` lagrar databas-nivå metadata som alternativ till poster i `metadata.json`. Skapas automatiskt vid uppstart.
+
+**Schema:**
+- `database_metadata` - title, description, source, license per databas
+- `database_permissions` - normaliserad tabell med (database_name, action, actor_key, actor_value)
+
+Behörighetsrader assembleras till Datasettes `allow`-dict:
+- `action = "view-database"` → `allow` i metadata
+- `action = "execute-sql"` → `allow_sql` i metadata
+
+**Konfiguration** (valfri, i metadata.json):
+```json
+{"plugins": {"datasette-svk-layout": {"metadata_db_path": "data/svk_metadata.db"}}}
+```
+
+**MetadataDB-klass** (`metadata_db.py`): Singleton med rekursionsskydd (pga `get_metadata` hook → `plugin_config` → `metadata` → `get_metadata`). Använder direkt `sqlite3` (inte async) eftersom `get_metadata` hook är synkron.
+
+### Admin-UI
+
+Routes under `/-/admin/` (kräver admin-behörighet):
+- `/-/admin/databases` - Lista/sök databaser
+- `/-/admin/databases/{name}` - Redigera metadata och behörigheter
+- `/-/admin/databases/{name}/delete` - Ta bort databaspost
+- `/-/admin/import` - Importera från metadata.json (förhandsgranskning + import)
+
+**Migrering från metadata.json:**
+```bash
+python -m datasette_svk_layout.migrate_metadata [metadata_path] [db_path]
+```
 
 ## Known Limitations
 
