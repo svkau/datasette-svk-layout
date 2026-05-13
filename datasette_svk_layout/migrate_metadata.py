@@ -5,7 +5,7 @@ Usage:
 
 Defaults:
     metadata_path: data/metadata.json
-    db_path: data/svk_metadata.db
+    db_path: datasette_svk_layout/datasette_svk_layout/data/svk_metadata.db
 """
 import json
 import sys
@@ -13,7 +13,7 @@ from pathlib import Path
 from datasette_svk_layout.metadata_db import MetadataDB
 
 
-def migrate(metadata_path="data/metadata.json", db_path="data/svk_metadata.db"):
+def migrate(metadata_path="data/metadata.json", db_path="datasette_svk_layout/data/svk_metadata.db"):
     metadata_path = Path(metadata_path)
     if not metadata_path.exists():
         print(f"Fel: {metadata_path} hittades inte.")
@@ -37,6 +37,6 @@ def migrate(metadata_path="data/metadata.json", db_path="data/svk_metadata.db"):
 
 if __name__ == "__main__":
     metadata_path = sys.argv[1] if len(sys.argv) > 1 else "data/metadata.json"
-    db_path = sys.argv[2] if len(sys.argv) > 2 else "data/svk_metadata.db"
+    db_path = sys.argv[2] if len(sys.argv) > 2 else "datasette_svk_layout/data/svk_metadata.db"
     success = migrate(metadata_path, db_path)
     sys.exit(0 if success else 1)
