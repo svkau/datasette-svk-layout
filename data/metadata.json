@@ -13,55 +13,35 @@
         "organizations_ids": [
           5010
         ]
-      },
-      "title": "Ekonomihandlingar - Nationell nivå",
-      "description": "",
-      "source": "",
-      "license": ""
+      }
     },
     "aveny_2520037173": {
       "allow": {
         "organizations_ids": [
           4735
         ]
-      },
-      "title": "Ekonomihandlingar - Sunne pastorat",
-      "description": "",
-      "source": "",
-      "license": ""
+      }
     },
     "lonehandlingar_2520026135": {
       "allow": {
         "organizations_ids": [
           5010
         ]
-      },
-      "title": "Lönehandlingar - Nationell nivå",
-      "description": "",
-      "source": "",
-      "license": ""
+      }
     },
     "lonehandlingar_2520037173": {
       "allow": {
         "organizations_ids": [
           4735
         ]
-      },
-      "title": "Lönehandlingar - Sunne pastorat",
-      "description": "",
-      "source": "",
-      "license": ""
+      }
     },
     "hrm_2520037173": {
       "allow": {
         "organizations_ids": [
           4735
         ]
-      },
-      "title": "HR Personalsystem - Sunne pastorat",
-      "description": "",
-      "source": "",
-      "license": ""
+      }
     },
     "vips_2520026135": {
       "allow": {
@@ -79,11 +59,7 @@
         "organizations_ids": [
           5010
         ]
-      },
-      "title": "Public 360 - Nationell nivå",
-      "description": "",
-      "source": "",
-      "license": ""
+      }
     }
   },
   "plugins": {

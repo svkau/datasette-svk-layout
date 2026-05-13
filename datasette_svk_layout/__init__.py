@@ -37,7 +37,7 @@ def _get_metadata_db(datasette=None):
     _metadata_db_initializing = True
 
     try:
-        db_path = "data/svk_metadata.db"
+        db_path = str(Path(__file__).parent / "data" / "svk_metadata.db")
         if datasette:
             plugin_config = datasette.plugin_config("datasette-svk-layout") or {}
             db_path = plugin_config.get("metadata_db_path", db_path)
