@@ -8,11 +8,12 @@ def _get_metadata_db():
 
 
 async def _check_admin(datasette, request):
-    """Check if current actor has admin permission."""
+    """Check if current actor has access.search_admin permission."""
     actor = request.actor if hasattr(request, 'actor') else None
     if actor is None:
         return False
-    return await datasette.permission_allowed(actor, "admin", default=False)
+    actor_permissions = actor.get('permissions', [])
+    return 'access.search_admin' in actor_permissions
 
 
 async def _render(datasette, request, template, context):
@@ -68,13 +69,21 @@ async def admin_database_edit(scope, receive, datasette, request):
         )
 
         # Save permissions for each action
-        for action in ("view-database", "execute-sql"):
-            roles_str = post_vars.get(f"perm_{action}_roles", "").strip()
-            if roles_str:
-                roles = [r.strip() for r in roles_str.split(",") if r.strip()]
-                mdb.set_database_permissions(database_name, action, {"roles": roles})
-            else:
-                mdb.set_database_permissions(database_name, action, None)
+        # view-database: organisations_ids
+        org_ids_str = post_vars.get("perm_view-database_organisations_ids", "").strip()
+        if org_ids_str:
+            org_ids = [v.strip() for v in org_ids_str.split(",") if v.strip()]
+            mdb.set_database_permissions(database_name, "view-database", {"organisations_ids": org_ids})
+        else:
+            mdb.set_database_permissions(database_name, "view-database", None)
+
+        # execute-sql: permissions
+        perms_str = post_vars.get("perm_execute-sql_permissions", "").strip()
+        if perms_str:
+            perms = [p.strip() for p in perms_str.split(",") if p.strip()]
+            mdb.set_database_permissions(database_name, "execute-sql", {"permissions": perms})
+        else:
+            mdb.set_database_permissions(database_name, "execute-sql", None)
 
         return Response.redirect(f"/-/admin/databases/{database_name}?saved=1")
 

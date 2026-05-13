@@ -179,7 +179,7 @@ class MetadataDB:
     def set_database_permissions(self, database_name, action, allow_dict):
         """Replace all permission rows for (database, action) with new allow_dict.
 
-        allow_dict format: {"roles": ["hr-admin", "arkivarie"], "id": ["user1"]}
+        allow_dict format: {"organisations_ids": ["510"]} or {"permissions": ["access.search_admin"]}
         Pass empty dict or None to remove all permissions for this action.
         """
         self._conn.execute(

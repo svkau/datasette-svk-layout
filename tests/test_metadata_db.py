@@ -58,7 +58,7 @@ class TestMetadataDB:
 
     def test_delete_database(self, mdb):
         mdb.set_database_metadata("hrm_123", title="Title")
-        mdb.set_database_permissions("hrm_123", "view-database", {"roles": ["admin"]})
+        mdb.set_database_permissions("hrm_123", "view-database", {"organisations_ids": ["510"]})
         mdb.delete_database("hrm_123")
         assert mdb.get_database_metadata("hrm_123") is None
         assert mdb.get_database_permissions("hrm_123") == {}
@@ -79,22 +79,24 @@ class TestMetadataDB:
 
     def test_set_and_get_permissions(self, mdb):
         mdb.set_database_permissions("hrm_123", "view-database", {
-            "roles": ["hr-admin", "arkivarie"],
-            "id": ["user1"],
+            "organisations_ids": ["510", "3792"],
+        })
+        mdb.set_database_permissions("hrm_123", "execute-sql", {
+            "permissions": ["access.search_admin"],
         })
         perms = mdb.get_database_permissions("hrm_123")
         assert "view-database" in perms
-        assert sorted(perms["view-database"]["roles"]) == ["arkivarie", "hr-admin"]
-        assert perms["view-database"]["id"] == ["user1"]
+        assert sorted(perms["view-database"]["organisations_ids"]) == ["3792", "510"]
+        assert perms["execute-sql"]["permissions"] == ["access.search_admin"]
 
     def test_replace_permissions(self, mdb):
-        mdb.set_database_permissions("hrm_123", "view-database", {"roles": ["old"]})
-        mdb.set_database_permissions("hrm_123", "view-database", {"roles": ["new"]})
+        mdb.set_database_permissions("hrm_123", "view-database", {"organisations_ids": ["100"]})
+        mdb.set_database_permissions("hrm_123", "view-database", {"organisations_ids": ["200"]})
         perms = mdb.get_database_permissions("hrm_123")
-        assert perms["view-database"]["roles"] == ["new"]
+        assert perms["view-database"]["organisations_ids"] == ["200"]
 
     def test_clear_permissions(self, mdb):
-        mdb.set_database_permissions("hrm_123", "view-database", {"roles": ["admin"]})
+        mdb.set_database_permissions("hrm_123", "view-database", {"organisations_ids": ["510"]})
         mdb.set_database_permissions("hrm_123", "view-database", None)
         perms = mdb.get_database_permissions("hrm_123")
         assert "view-database" not in perms
@@ -103,14 +105,14 @@ class TestMetadataDB:
 class TestAllowDictAssembly:
     def test_allow_dict_in_datasette_format(self, mdb):
         mdb.set_database_metadata("hrm_123", title="HR")
-        mdb.set_database_permissions("hrm_123", "view-database", {"roles": ["admin", "hr"]})
-        mdb.set_database_permissions("hrm_123", "execute-sql", {"roles": ["admin"]})
+        mdb.set_database_permissions("hrm_123", "view-database", {"organisations_ids": ["510", "3792"]})
+        mdb.set_database_permissions("hrm_123", "execute-sql", {"permissions": ["access.search_admin"]})
 
         result = mdb.get_all_metadata_as_datasette_dict()
         db_meta = result["databases"]["hrm_123"]
         assert db_meta["title"] == "HR"
-        assert db_meta["allow"] == {"roles": ["admin", "hr"]}
-        assert db_meta["allow_sql"] == {"roles": ["admin"]}
+        assert sorted(db_meta["allow"]["organisations_ids"]) == ["3792", "510"]
+        assert db_meta["allow_sql"] == {"permissions": ["access.search_admin"]}
 
     def test_cache_invalidation(self, mdb):
         mdb.set_database_metadata("test_db", title="V1")
@@ -135,8 +137,8 @@ class TestImport:
                     "description": "HR data",
                     "source": "HR-system",
                     "license": "Internt",
-                    "allow": {"roles": ["hr-admin"]},
-                    "allow_sql": {"roles": ["admin"]},
+                    "allow": {"organisations_ids": ["510"]},
+                    "allow_sql": {"permissions": ["access.search_admin"]},
                     "tables": {"should": "be ignored"},
                     "queries": {"should": "be ignored"},
                 },
@@ -154,8 +156,8 @@ class TestImport:
         assert meta["source"] == "HR-system"
 
         perms = mdb.get_database_permissions("employees")
-        assert perms["view-database"]["roles"] == ["hr-admin"]
-        assert perms["execute-sql"]["roles"] == ["admin"]
+        assert perms["view-database"]["organisations_ids"] == ["510"]
+        assert perms["execute-sql"]["permissions"] == ["access.search_admin"]
 
         meta2 = mdb.get_database_metadata("sakila")
         assert meta2["title"] == "Sakila"
@@ -170,7 +172,7 @@ async def test_get_metadata_hook(tmp_path):
     db_path = tmp_path / "test_metadata.db"
     mdb = MetadataDB(db_path)
     mdb.set_database_metadata("test_db", title="From SQLite")
-    mdb.set_database_permissions("test_db", "view-database", {"roles": ["tester"]})
+    mdb.set_database_permissions("test_db", "view-database", {"organisations_ids": ["510"]})
 
     # Patch the global singleton
     old_instance = datasette_svk_layout._metadata_db_instance
@@ -185,7 +187,7 @@ async def test_get_metadata_hook(tmp_path):
         assert title == "From SQLite"
 
         allow = datasette.metadata("allow", database="test_db")
-        assert allow == {"roles": ["tester"]}
+        assert allow == {"organisations_ids": ["510"]}
     finally:
         datasette_svk_layout._metadata_db_instance = old_instance
         mdb.close()
