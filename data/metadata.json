@@ -6,100 +6,84 @@
   "source": "Svenska kyrkan",
   "source_url": "https://www.svenskakyrkan.se",
   "license": "Internt bruk - Svenska kyrkan",
+  "allow_sql": { "permissions": ["access.search_admin"] },
   "databases": {
-    "employees": {
-      "title": "Personalregister",
-      "description": "Databas med personalinformation och organisationsstruktur för Svenska kyrkan.",
-      "source": "HR-system Svenska kyrkan",
-      "license": "Internt bruk - Svenska kyrkan",
-      "tables": {
-        "departments": {
-          "title": "Avdelningar",
-          "description": "Information om alla avdelningar och organisationsenheter inom Svenska kyrkan."
-        },
-        "employees": {
-          "title": "Anställda",
-          "description": "Personalregister med grundläggande information om alla anställda."
-        },
-        "dept_emp": {
-          "title": "Avdelningsanställning",
-          "description": "Kopplingstabell som visar vilka anställda som tillhör vilka avdelningar."
-        },
-        "dept_manager": {
-          "title": "Avdelningschefer",
-          "description": "Register över nuvarande och tidigare avdelningschefer."
-        },
-        "salaries": {
-          "title": "Löner",
-          "description": "Historisk löneinformation för alla anställda (konfidentiell)."
-        },
-        "titles": {
-          "title": "Befattningar",
-          "description": "Historik över befattningar och tjänstetitlar för anställda."
-        }
+    "aveny_2520026135": {
+      "allow": {
+        "organizations_ids": [
+          5010
+        ]
       },
-      "queries": {
-        "current_employees": {
-          "sql": "SELECT * FROM employees LIMIT 50",
-          "title": "Nuvarande anställda",
-          "description": "Lista alla anställda som fortfarande är aktiva inom organisationen."
-        },
-        "department_overview": {
-          "sql": "SELECT * FROM departments  LIMIT 50",
-          "title": "Avdelningsöversikt",
-          "description": "Sammanställning av antal anställda per avdelning."
-        }
-      }
+      "title": "Ekonomihandlingar - Nationell nivå",
+      "description": "",
+      "source": "",
+      "license": ""
     },
-    "sakila": {
-      "title": "Sakila Demonstrationsdatabas",
-      "description": "Demonstrationsdatabas med filmuthyrningsdata, används för utbildning och testning.",
-      "source": "MySQL Sakila Sample Database",
-      "license": "BSD License",
-      "tables": {
-        "film": {
-          "title": "Filmer",
-          "description": "Katalog över alla filmer som finns tillgängliga för uthyrning."
-        },
-        "actor": {
-          "title": "Skådespelare",
-          "description": "Register över skådespelare som medverkar i filmerna."
-        },
-        "customer": {
-          "title": "Kunder",
-          "description": "Kundregister med kontaktinformation och medlemsuppgifter."
-        },
-        "rental": {
-          "title": "Uthyrningar",
-          "description": "Transaktionshistorik för alla filmuthyrningar."
-        },
-        "inventory": {
-          "title": "Lager",
-          "description": "Lagersaldo och tillgänglighet för filmexemplar."
-        },
-        "payment": {
-          "title": "Betalningar",
-          "description": "Betalningshistorik och transaktionsdata."
-        },
-        "store": {
-          "title": "Butiker",
-          "description": "Information om videouthyrningsbutiker och deras personal."
-        },
-        "staff": {
-          "title": "Personal",
-          "description": "Personalregister för butikspersonal och administration."
-        }
+    "aveny_2520037173": {
+      "allow": {
+        "organizations_ids": [
+          4735
+        ]
       },
-      "queries": {
-        "popular_films": {
-          "title": "Populära filmer",
-          "description": "Lista över de mest uthyrda filmerna under senaste månaden."
-        },
-        "revenue_report": {
-          "title": "Intäktsrapport",
-          "description": "Månadsvis sammanställning av uthyrningsintäkter per butik."
-        }
-      }
+      "title": "Ekonomihandlingar - Sunne pastorat",
+      "description": "",
+      "source": "",
+      "license": ""
+    },
+    "lonehandlingar_2520026135": {
+      "allow": {
+        "organizations_ids": [
+          5010
+        ]
+      },
+      "title": "Lönehandlingar - Nationell nivå",
+      "description": "",
+      "source": "",
+      "license": ""
+    },
+    "lonehandlingar_2520037173": {
+      "allow": {
+        "organizations_ids": [
+          4735
+        ]
+      },
+      "title": "Lönehandlingar - Sunne pastorat",
+      "description": "",
+      "source": "",
+      "license": ""
+    },
+    "hrm_2520037173": {
+      "allow": {
+        "organizations_ids": [
+          4735
+        ]
+      },
+      "title": "HR Personalsystem - Sunne pastorat",
+      "description": "",
+      "source": "",
+      "license": ""
+    },
+    "vips_2520026135": {
+      "allow": {
+        "organizations_ids": [
+          5010
+        ]
+      },
+      "title": "Vips Online - Nationell nivå",
+      "description": "",
+      "source": "",
+      "license": ""
+    },
+    "Public_360_2520026135": {
+      "allow": {
+        "organizations_ids": [
+          5010
+        ]
+      },
+      "title": "Public 360 - Nationell nivå",
+      "description": "",
+      "source": "",
+      "license": ""
     }
   },
   "plugins": {

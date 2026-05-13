@@ -143,7 +143,16 @@ def extract_orgnr(database_name):
     return match.group(1) if match else None
 
 def get_database_type(database_name):
-    """Extract database type from database name"""
+    """Extract database type from database name.
+
+    Matches against known types in database_types.json (longest match first)
+    to handle types with underscores like 'Public_360'.
+    """
+    database_types = load_database_types()
+    for type_name in sorted(database_types.keys(), key=len, reverse=True):
+        if database_name.startswith(type_name + '_'):
+            return type_name
+    # Fallback: first segment before underscore
     if '_' in database_name:
         return database_name.split('_')[0]
     return database_name
@@ -274,22 +283,16 @@ def permission_allowed(datasette, actor, action, resource):
             if 'tables' in db_config and table_name in db_config['tables']:
                 table_config = db_config['tables'][table_name]
 
-                if 'allow' in table_config and action in table_config['allow']:
-                    allowed = table_config['allow'][action]
+                if 'allow' in table_config:
+                    allow_config = table_config['allow']
 
-                    # If it's a boolean, return it directly
-                    if isinstance(allowed, bool):
-                        return allowed
-
-                    # If it's a list of permissions, check if actor has required ones
-                    if isinstance(allowed, list) and actor:
+                    # "permissions" key = general restriction on all actions
+                    if 'permissions' in allow_config:
+                        required = allow_config['permissions']
+                        if not actor:
+                            return False
                         actor_permissions = actor.get('permissions', [])
-                        # User needs at least one of the allowed permissions
-                        return any(perm in allowed for perm in actor_permissions)
-
-                    # If configured but actor is None, deny access
-                    if isinstance(allowed, list) and not actor:
-                        return False
+                        return any(perm in required for perm in actor_permissions)
 
     # Fall back to default behavior (metadata.json handles it)
     # This allows database-level permissions to be controlled by metadata.json
