@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_new %}Ny databas{% else %}Redigera {{ database_name }}{% endif %} - Administration{% endblock %}
+
+{% block body_class %}admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if is_new %}Ny databas: {{ database_name }}{% else %}Redigera: {{ database_name }}{% endif %}</h1>
+    <a href="/-/admin/databases" class="btn btn-secondary">Tillbaka</a>
+</div>
+
+{% if saved %}
+<div class="message-info">Ändringarna har sparats.</div>
+{% endif %}
+
+<form method="post" action="/-/admin/databases/{{ database_name }}">
+    <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
+
+    <fieldset>
+        <legend>Metadata</legend>
+
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" value="{{ metadata.get('title', '') }}" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Beskrivning</label>
+            <textarea id="description" name="description" rows="3" class="form-control">{{ metadata.get('description', '') }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="source">Källa</label>
+            <input type="text" id="source" name="source" value="{{ metadata.get('source', '') }}" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label for="license">Licens</label>
+            <input type="text" id="license" name="license" value="{{ metadata.get('license', '') }}" class="form-control">
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Behörigheter</legend>
+        <p class="form-help">Ange roller separerade med komma. Lämna tomt för att inte sätta behörighet (faller tillbaka till metadata.json eller database_types.json).</p>
+
+        <div class="form-group">
+            <label for="perm_view-database_roles">view-database (roller)</label>
+            <input type="text" id="perm_view-database_roles" name="perm_view-database_roles"
+                   value="{{ permissions.get('view-database', {}).get('roles', []) | join(', ') }}"
+                   class="form-control" placeholder="t.ex. arkivarie, hr-admin">
+        </div>
+
+        <div class="form-group">
+            <label for="perm_execute-sql_roles">execute-sql (roller)</label>
+            <input type="text" id="perm_execute-sql_roles" name="perm_execute-sql_roles"
+                   value="{{ permissions.get('execute-sql', {}).get('roles', []) | join(', ') }}"
+                   class="form-control" placeholder="t.ex. arkivarie, admin">
+        </div>
+    </fieldset>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Spara</button>
+        {% if not is_new %}
+        <a href="/-/admin/databases" class="btn btn-secondary">Avbryt</a>
+        {% endif %}
+    </div>
+</form>
+
+{% if not is_new %}
+<hr>
+<form method="post" action="/-/admin/databases/{{ database_name }}/delete"
+      onsubmit="return confirm('Vill du verkligen ta bort metadata för {{ database_name }}?')">
+    <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
+    <button type="submit" class="btn btn-danger">Ta bort databaspost</button>
+</form>
+{% endif %}
+{% endblock %}

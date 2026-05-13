@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Importera metadata - Administration{% endblock %}
+
+{% block body_class %}admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Importera från metadata.json</h1>
+    <a href="/-/admin/databases" class="btn btn-secondary">Tillbaka</a>
+</div>
+
+{% if error %}
+<div class="message-error">{{ error }}</div>
+{% endif %}
+
+{% if result %}
+<div class="message-info">
+    Import klar! {{ result.imported_metadata }} databas(er) med metadata importerades,
+    {{ result.imported_permissions }} behörighetspost(er) importerades.
+</div>
+<p><a href="/-/admin/databases">Visa alla databaser</a></p>
+{% elif preview %}
+<h2>Förhandsgranskning</h2>
+<p>Följande databaser kommer att importeras från metadata.json:</p>
+
+<table class="rows-and-columns">
+    <thead>
+        <tr>
+            <th>Databasnamn</th>
+            <th>Title</th>
+            <th>Beskrivning</th>
+            <th>allow</th>
+            <th>allow_sql</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in preview %}
+        <tr>
+            <td>{{ entry.name }}</td>
+            <td>{{ entry.title }}</td>
+            <td>{{ entry.description | truncate(60) }}</td>
+            <td>{% if entry.has_allow %}Ja{% else %}Nej{% endif %}</td>
+            <td>{% if entry.has_allow_sql %}Ja{% else %}Nej{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<form method="post" action="/-/admin/import">
+    <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
+    <input type="hidden" name="action" value="import">
+    <button type="submit" class="btn btn-primary"
+            onclick="return confirm('Importera {{ preview | length }} databas(er)?')">
+        Importera
+    </button>
+    <a href="/-/admin/databases" class="btn btn-secondary">Avbryt</a>
+</form>
+{% else %}
+<p>
+    Importera databasnivå-metadata (title, description, source, license, allow, allow_sql)
+    från den aktuella metadata.json till SQLite-databasen.
+</p>
+{% if db_count %}
+<p><strong>{{ db_count }}</strong> databas(er) finns i metadata.json.</p>
+{% else %}
+<p>Inga databaser hittades i metadata.json.</p>
+{% endif %}
+
+<form method="post" action="/-/admin/import">
+    <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
+    <input type="hidden" name="action" value="preview">
+    <button type="submit" class="btn btn-primary" {% if not db_count %}disabled{% endif %}>
+        Förhandsgranska import
+    </button>
+</form>
+{% endif %}
+{% endblock %}
