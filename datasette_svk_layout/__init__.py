@@ -264,8 +264,21 @@ def permission_allowed(datasette, actor, action, resource):
     - This allows per-database unit_id in metadata.json + per-type roles in database_types.json
     """
 
-    # Only handle table-level and row-level permissions from database_types.json
-    # Let metadata.json handle database-level permissions (execute-sql, download)
+    # Hide database from index if actor lacks all table-level permissions
+    if action == "view-database" and resource:
+        database_name = resource if isinstance(resource, str) else resource[0]
+        db_config = get_database_config(database_name)
+        all_permissions = set()
+        for table_config in db_config.get("tables", {}).values():
+            perms = table_config.get("allow", {}).get("permissions", [])
+            all_permissions.update(perms)
+        if all_permissions:
+            if not actor:
+                return False
+            actor_permissions = actor.get("permissions", [])
+            if not any(p in all_permissions for p in actor_permissions):
+                return False
+
     table_actions = [
         "view-table", "insert-row", "update-row", "delete-row",
         "drop-table", "create-table", "alter-table"

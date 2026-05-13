@@ -111,3 +111,53 @@ def test_permission_fallback_non_table_action(mock_db_config):
         resource=("aveny_2520026135",)
     )
     assert result is None
+
+
+# -- view-database permission tests --
+
+def test_view_database_denied_without_actor(mock_db_config):
+    """Databas med tabellbehörigheter ska döljas utan aktör."""
+    result = permission_allowed(
+        datasette=None, actor=None, action="view-database",
+        resource="aveny_2520026135"
+    )
+    assert result is False
+
+
+def test_view_database_denied_wrong_role(mock_db_config):
+    """Databas ska döljas om aktören saknar alla tabellroller."""
+    actor = {"permissions": ["access.search_salaries"]}
+    result = permission_allowed(
+        datasette=None, actor=actor, action="view-database",
+        resource="aveny_2520026135"
+    )
+    assert result is False
+
+
+def test_view_database_allowed_matching_role(mock_db_config):
+    """Databas ska visas om aktören har minst en tabellroll."""
+    actor = {"permissions": ["access.search_economics"]}
+    result = permission_allowed(
+        datasette=None, actor=actor, action="view-database",
+        resource="aveny_2520026135"
+    )
+    assert result is None
+
+
+MOCK_DB_CONFIG_NO_PERMISSIONS = {
+    "tables": {
+        "budgetar": {
+            "title": "Budgetar"
+        }
+    }
+}
+
+
+def test_view_database_no_restriction_without_allow(mock_db_config):
+    """Databas utan tabellbehörigheter ska inte begränsas."""
+    with patch("datasette_svk_layout.get_database_config", return_value=MOCK_DB_CONFIG_NO_PERMISSIONS):
+        result = permission_allowed(
+            datasette=None, actor={"permissions": []}, action="view-database",
+            resource="some_database"
+        )
+    assert result is None
