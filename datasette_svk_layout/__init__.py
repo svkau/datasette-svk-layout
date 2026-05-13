@@ -7,16 +7,47 @@ from datasette.utils.asgi import Response
 import copy
 from jinja2 import ChoiceLoader, FileSystemLoader, PrefixLoader, TemplateNotFound
 from jinja2.loaders import BaseLoader
+from datasette_svk_layout.metadata_db import MetadataDB
 
-# Cache for units data and database types  
+# Cache for units data and database types
 _units_cache = None
 _database_types_cache = None
+_metadata_db_instance = None
 
 def clear_caches():
     """Clear all caches to reload data"""
     global _units_cache, _database_types_cache
     _units_cache = None
     _database_types_cache = None
+    if _metadata_db_instance:
+        _metadata_db_instance._invalidate_cache()
+
+
+_metadata_db_initializing = False
+
+def _get_metadata_db(datasette=None):
+    """Get or create the MetadataDB singleton."""
+    global _metadata_db_instance, _metadata_db_initializing
+    if _metadata_db_instance is not None:
+        return _metadata_db_instance
+
+    # Guard against recursion: get_metadata hook -> _get_metadata_db -> plugin_config -> metadata -> get_metadata
+    if _metadata_db_initializing:
+        return None
+    _metadata_db_initializing = True
+
+    try:
+        db_path = "data/svk_metadata.db"
+        if datasette:
+            plugin_config = datasette.plugin_config("datasette-svk-layout") or {}
+            db_path = plugin_config.get("metadata_db_path", db_path)
+
+        db_path = Path(db_path)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        _metadata_db_instance = MetadataDB(db_path)
+        return _metadata_db_instance
+    finally:
+        _metadata_db_initializing = False
 
 def load_units_data():
     """Load and cache units.json data"""
@@ -52,9 +83,16 @@ def get_database_config(database_name):
 
 def get_formatted_database_title(database_name):
     """Get formatted database title using type configuration"""
+    # Check SQLite metadata first
+    mdb = _get_metadata_db()
+    if mdb:
+        meta = mdb.get_database_metadata(database_name)
+        if meta and meta.get('title'):
+            return meta['title']
+
     unit_name = get_unit_name(database_name)
     db_config = get_database_config(database_name)
-    
+
     if unit_name and 'title_template' in db_config:
         return db_config['title_template'].format(unit_name=unit_name)
     elif unit_name:
@@ -64,9 +102,16 @@ def get_formatted_database_title(database_name):
 
 def get_formatted_database_description(database_name):
     """Get formatted database description using type configuration"""
+    # Check SQLite metadata first
+    mdb = _get_metadata_db()
+    if mdb:
+        meta = mdb.get_database_metadata(database_name)
+        if meta and meta.get('description'):
+            return meta['description']
+
     unit_name = get_unit_name(database_name)
     db_config = get_database_config(database_name)
-    
+
     if unit_name and 'description_template' in db_config:
         return db_config['description_template'].format(unit_name=unit_name)
     return None
@@ -102,6 +147,23 @@ def get_database_type(database_name):
     if '_' in database_name:
         return database_name.split('_')[0]
     return database_name
+
+@hookimpl
+def startup(datasette):
+    """Initialize metadata database on startup."""
+    _get_metadata_db(datasette)
+
+
+@hookimpl
+def get_metadata(datasette, key, database, table):
+    """Inject database-level metadata from SQLite store."""
+    if table is not None:
+        return {}
+    db = _get_metadata_db(datasette)
+    if db is None:
+        return {}
+    return db.get_all_metadata_as_datasette_dict()
+
 
 @hookimpl
 def canned_queries(datasette, database, actor):
@@ -436,7 +498,17 @@ async def serve_bilaga(scope, receive, datasette, request):
 
 @hookimpl
 def register_routes():
+    from datasette_svk_layout.admin_routes import (
+        admin_databases,
+        admin_database_edit,
+        admin_database_delete,
+        admin_import,
+    )
     return [
         (r"^/(?P<database>[^/]+)/dokument/(?P<doc_id>[^/]+)$", serve_document),
         (r"^/(?P<database>[^/]+)/bilaga/(?P<bilaga_id>[^/]+)$", serve_bilaga),
+        (r"^/-/admin/databases$", admin_databases),
+        (r"^/-/admin/databases/(?P<database_name>[^/]+)/delete$", admin_database_delete),
+        (r"^/-/admin/databases/(?P<database_name>[^/]+)$", admin_database_edit),
+        (r"^/-/admin/import$", admin_import),
     ]
