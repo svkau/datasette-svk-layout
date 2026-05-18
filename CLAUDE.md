@@ -62,7 +62,7 @@ Manages 500+ organizational databases. Database names follow pattern `{type}_{or
 
 | Type | Template prefix | Description |
 |------|----------------|-------------|
-| `Public_360` | — | Public 360 |
+| `Public_360` | — | Ärendehandlingar (20 tabeller + 7 dolda) |
 | `aveny` | `database-aveny-type` | Ekonomihandlingar |
 | `lonehandlingar` | — | Lonehandlingar |
 | `hrm` | `database-hrm-type`, `query-hrm-type-*`, `row-hrm-type-*` | HR Personalsystem med personsok, reserakningar, tidsredovisning och dokumentservering |
@@ -102,6 +102,20 @@ Behörighetsrader assembleras till Datasettes `allow`-dict:
 ```
 
 **MetadataDB-klass** (`metadata_db.py`): Singleton med rekursionsskydd (pga `get_metadata` hook → `plugin_config` → `metadata` → `get_metadata`). Använder direkt `sqlite3` (inte async) eftersom `get_metadata` hook är synkron.
+
+**Viktigt om typkonvertering:** `database_permissions` lagrar alla `actor_value` som strängar. `_coerce_value()` konverterar numeriska strängar tillbaka till `int` vid utläsning, eftersom Datasette gör typkänslig matchning av allow-dicts mot actor-fält (t.ex. `organizations_ids` är heltal i actor).
+
+**Extern integration (ESSArch):** Externa system kan registrera nya databaser direkt via `sqlite3` utan beroende på pluginet:
+```python
+import sqlite3
+conn = sqlite3.connect("datasette_svk_layout/data/svk_metadata.db")
+conn.execute(
+    "INSERT OR IGNORE INTO database_permissions (database_name, action, actor_key, actor_value) VALUES (?, 'view-database', 'organizations_ids', ?)",
+    (database_name, str(org_id))
+)
+conn.commit()
+```
+Notera: `actor_value` ska alltid lagras som sträng — konvertering till rätt typ sker vid utläsning.
 
 ### Admin-UI
 
