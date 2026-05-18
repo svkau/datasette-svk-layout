@@ -46,11 +46,11 @@
         <p class="form-help">Lämna tomt för att inte sätta behörighet (faller tillbaka till metadata.json eller database_types.json).</p>
 
         <div class="form-group">
-            <label for="perm_view-database_organisations_ids">view-database (organisations-ID)</label>
-            <input type="text" id="perm_view-database_organisations_ids" name="perm_view-database_organisations_ids"
-                   value="{{ permissions.get('view-database', {}).get('organisations_ids', []) | join(', ') }}"
+            <label for="perm_view-database_organizations_ids">view-database (organisations-ID)</label>
+            <input type="text" id="perm_view-database_organizations_ids" name="perm_view-database_organizations_ids"
+                   value="{{ permissions.get('view-database', {}).get('organizations_ids', []) | join(', ') }}"
                    class="form-control" placeholder="t.ex. 510, 3792">
-            <small class="form-text">Ange organisations-ID separerade med komma. Matchar mot actorns organisations_ids.</small>
+            <small class="form-text">Ange organisations-ID separerade med komma. Matchar mot actorns organizations_ids.</small>
         </div>
 
         <div class="form-group">

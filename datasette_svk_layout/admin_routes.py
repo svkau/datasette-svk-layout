@@ -69,11 +69,11 @@ async def admin_database_edit(scope, receive, datasette, request):
         )
 
         # Save permissions for each action
-        # view-database: organisations_ids
-        org_ids_str = post_vars.get("perm_view-database_organisations_ids", "").strip()
+        # view-database: organizations_ids
+        org_ids_str = post_vars.get("perm_view-database_organizations_ids", "").strip()
         if org_ids_str:
             org_ids = [v.strip() for v in org_ids_str.split(",") if v.strip()]
-            mdb.set_database_permissions(database_name, "view-database", {"organisations_ids": org_ids})
+            mdb.set_database_permissions(database_name, "view-database", {"organizations_ids": org_ids})
         else:
             mdb.set_database_permissions(database_name, "view-database", None)
 
