@@ -1,7 +1,7 @@
 {
   "Public_360": {
-    "title_template": "Public 360 - {unit_name}",
-    "description_template": ""
+    "title_template": "Ärendehandlingar - {unit_name}",
+    "description_template": "Uttag från ärendehanteringssystem"
   },
   "aveny": {
     "title_template": "Ekonomihandlingar - {unit_name}",
