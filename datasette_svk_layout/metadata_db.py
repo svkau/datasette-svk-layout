@@ -124,21 +124,37 @@ class MetadataDB:
         return result
 
     def list_databases(self, search=None, db_type=None):
-        """List databases with optional filtering. Returns list of dicts."""
-        query = "SELECT * FROM database_metadata"
+        """List databases with optional filtering. Returns list of dicts.
+
+        Includes databases from both database_metadata and database_permissions tables.
+        """
+        query = """
+            SELECT
+                d.database_name,
+                m.title,
+                m.description,
+                m.source,
+                m.license
+            FROM (
+                SELECT database_name FROM database_metadata
+                UNION
+                SELECT DISTINCT database_name FROM database_permissions
+            ) d
+            LEFT JOIN database_metadata m ON d.database_name = m.database_name
+        """
         params = []
         conditions = []
 
         if search:
-            conditions.append("(database_name LIKE ? OR title LIKE ?)")
+            conditions.append("(d.database_name LIKE ? OR m.title LIKE ?)")
             params.extend([f"%{search}%", f"%{search}%"])
         if db_type:
-            conditions.append("database_name LIKE ?")
+            conditions.append("d.database_name LIKE ?")
             params.append(f"{db_type}_%")
 
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
-        query += " ORDER BY database_name"
+        query += " ORDER BY d.database_name"
 
         rows = self._conn.execute(query, params).fetchall()
         return [dict(row) for row in rows]
