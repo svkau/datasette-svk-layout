@@ -44,6 +44,13 @@ class MetadataDB:
     def _invalidate_cache(self):
         self._cache = None
 
+    @staticmethod
+    def _coerce_value(value):
+        """Convert numeric strings back to int for Datasette allow-dict matching."""
+        if value.isdigit():
+            return int(value)
+        return value
+
     # --- Read operations ---
 
     def get_database_metadata(self, database_name):
@@ -67,7 +74,7 @@ class MetadataDB:
             action = row["action"]
             key = row["actor_key"]
             value = row["actor_value"]
-            result.setdefault(action, {}).setdefault(key, []).append(value)
+            result.setdefault(action, {}).setdefault(key, []).append(self._coerce_value(value))
         return result
 
     def _build_allow_dict(self, database_name, action):
@@ -80,7 +87,7 @@ class MetadataDB:
             return None
         allow = {}
         for row in rows:
-            allow.setdefault(row["actor_key"], []).append(row["actor_value"])
+            allow.setdefault(row["actor_key"], []).append(self._coerce_value(row["actor_value"]))
         return allow
 
     def get_all_metadata_as_datasette_dict(self):
@@ -117,7 +124,7 @@ class MetadataDB:
                 continue
             db_entry = databases.setdefault(db_name, {})
             allow = db_entry.setdefault(metadata_key, {})
-            allow.setdefault(row["actor_key"], []).append(row["actor_value"])
+            allow.setdefault(row["actor_key"], []).append(self._coerce_value(row["actor_value"]))
 
         result = {"databases": databases} if databases else {}
         self._cache = result

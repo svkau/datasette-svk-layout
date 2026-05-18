@@ -1,7 +1,170 @@
 {
   "Public_360": {
     "title_template": "Ärendehandlingar - {unit_name}",
-    "description_template": "Uttag från ärendehanteringssystem"
+    "description_template": "Uttag från ärendehanteringssystem",
+    "tables": {
+      "aggregation": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Ärenden",
+        "description": "Ärenden (aggregationer) med klassificering, status och sekretessinformation"
+      },
+      "record": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Handlingar",
+        "description": "Enskilda handlingar kopplade till ärenden"
+      },
+      "appendix": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Bilagor",
+        "description": "Bifogade filer kopplade till ärenden och handlingar"
+      },
+      "agents": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Aktörer",
+        "description": "Personer och organisationer som förekommer i ärenden och handlingar"
+      },
+      "agenttypes": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Aktörstyper",
+        "description": "Typer av aktörer (t.ex. handläggare, avsändare)"
+      },
+      "keyword": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Nyckelord",
+        "description": "Nyckelord för klassificering av ärenden och handlingar"
+      },
+      "restriction": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Sekretessmarkeringar",
+        "description": "Sekretessmarkeringar med typ och lagrum"
+      },
+      "diary": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Diarier",
+        "description": "Diarier som ärenden tillhör"
+      },
+      "dates": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Datum",
+        "description": "Datum kopplade till ärenden och handlingar"
+      },
+      "extraids": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Extra identifierare",
+        "description": "Ytterligare identifierare för ärenden och handlingar"
+      },
+      "othertitles": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Alternativa titlar",
+        "description": "Alternativa titlar för ärenden och handlingar"
+      },
+      "aggregationagent": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Ärende–aktör",
+        "description": "Kopplingar mellan ärenden och aktörer"
+      },
+      "aggregationkeyword": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Ärende–nyckelord",
+        "description": "Kopplingar mellan ärenden och nyckelord"
+      },
+      "aggregationrestriction": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Ärende–sekretess",
+        "description": "Kopplingar mellan ärenden och sekretessmarkeringar"
+      },
+      "recordagent": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Handling–aktör",
+        "description": "Kopplingar mellan handlingar och aktörer"
+      },
+      "recordkeyword": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Handling–nyckelord",
+        "description": "Kopplingar mellan handlingar och nyckelord"
+      },
+      "recordrestriction": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Handling–sekretess",
+        "description": "Kopplingar mellan handlingar och sekretessmarkeringar"
+      },
+      "archivistorganization": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Arkivbildare",
+        "description": "Organisationer som är arkivbildare"
+      },
+      "creatororganization": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "Skapande organisation",
+        "description": "Organisationer som skapat arkivmaterialet"
+      },
+      "xml": {
+        "allow": {
+          "permissions": ["access.search_casefiles", "access.search_everything"]
+        },
+        "title": "XML-data",
+        "description": "XML-representation av handlingar och ärenden"
+      },
+      "aggregation_fts": {
+        "hidden": true
+      },
+      "aggregation_fts_config": {
+        "hidden": true
+      },
+      "aggregation_fts_content": {
+        "hidden": true
+      },
+      "aggregation_fts_data": {
+        "hidden": true
+      },
+      "aggregation_fts_docsize": {
+        "hidden": true
+      },
+      "aggregation_fts_idx": {
+        "hidden": true
+      },
+      "_templates_": {
+        "hidden": true
+      }
+    }
   },
   "aveny": {
     "title_template": "Ekonomihandlingar - {unit_name}",

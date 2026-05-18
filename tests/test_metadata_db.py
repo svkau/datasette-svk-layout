@@ -86,14 +86,14 @@ class TestMetadataDB:
         })
         perms = mdb.get_database_permissions("hrm_123")
         assert "view-database" in perms
-        assert sorted(perms["view-database"]["organizations_ids"]) == ["3792", "510"]
+        assert sorted(perms["view-database"]["organizations_ids"]) == [510, 3792]
         assert perms["execute-sql"]["permissions"] == ["access.search_admin"]
 
     def test_replace_permissions(self, mdb):
         mdb.set_database_permissions("hrm_123", "view-database", {"organizations_ids": ["100"]})
         mdb.set_database_permissions("hrm_123", "view-database", {"organizations_ids": ["200"]})
         perms = mdb.get_database_permissions("hrm_123")
-        assert perms["view-database"]["organizations_ids"] == ["200"]
+        assert perms["view-database"]["organizations_ids"] == [200]
 
     def test_clear_permissions(self, mdb):
         mdb.set_database_permissions("hrm_123", "view-database", {"organizations_ids": ["510"]})
@@ -111,7 +111,7 @@ class TestAllowDictAssembly:
         result = mdb.get_all_metadata_as_datasette_dict()
         db_meta = result["databases"]["hrm_123"]
         assert db_meta["title"] == "HR"
-        assert sorted(db_meta["allow"]["organizations_ids"]) == ["3792", "510"]
+        assert sorted(db_meta["allow"]["organizations_ids"]) == [510, 3792]
         assert db_meta["allow_sql"] == {"permissions": ["access.search_admin"]}
 
     def test_cache_invalidation(self, mdb):
@@ -156,7 +156,7 @@ class TestImport:
         assert meta["source"] == "HR-system"
 
         perms = mdb.get_database_permissions("employees")
-        assert perms["view-database"]["organizations_ids"] == ["510"]
+        assert perms["view-database"]["organizations_ids"] == [510]
         assert perms["execute-sql"]["permissions"] == ["access.search_admin"]
 
         meta2 = mdb.get_database_metadata("sakila")
@@ -187,7 +187,7 @@ async def test_get_metadata_hook(tmp_path):
         assert title == "From SQLite"
 
         allow = datasette.metadata("allow", database="test_db")
-        assert allow == {"organizations_ids": ["510"]}
+        assert allow == {"organizations_ids": [510]}
     finally:
         datasette_svk_layout._metadata_db_instance = old_instance
         mdb.close()

@@ -46,7 +46,7 @@
     "vips_2520026135": {
       "allow": {
         "organizations_ids": [
-          5010
+          5011
         ]
       },
       "title": "Vips Online - Nationell nivå",
@@ -54,14 +54,6 @@
       "source": "",
       "license": ""
     },
-    "Public_360_2520026135": {
-      "allow": {
-        "organizations_ids": [
-          5010
-        ]
-      }
-    }
-  },
   "plugins": {
     "datasette-auth-passwords": {
       "henvital_password_hash": {
@@ -91,4 +83,4 @@
     },
     "datasette-svk-layout": {}
   }
-}
+}}
