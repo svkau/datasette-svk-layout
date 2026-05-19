@@ -1,7 +1,7 @@
 [project]
 name = "datasette-svk-layout"
-version = "0.1"
-description = "Basic layout for SvK's Datasette"
+version = "0.2"
+description = "Datasette-plugin med layout, databas-typsystem och admin-UI för Svenska kyrkan"
 readme = "README.md"
 authors = [{name = "Henrik Vitalis"}]
 license = "Apache-2.0"
@@ -18,10 +18,10 @@ requires = ["setuptools >= 77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project.urls]
-Homepage = "https://github.com/vitlais/datasette-svk-layout"
-Changelog = "https://github.com/vitlais/datasette-svk-layout/releases"
-Issues = "https://github.com/vitlais/datasette-svk-layout/issues"
-CI = "https://github.com/vitlais/datasette-svk-layout/actions"
+Homepage = "https://github.com/svkau/datasette-svk-layout"
+Changelog = "https://github.com/svkau/datasette-svk-layout/releases"
+Issues = "https://github.com/svkau/datasette-svk-layout/issues"
+CI = "https://github.com/svkau/datasette-svk-layout/actions"
 
 [project.entry-points.datasette]
 svk_layout = "datasette_svk_layout"
