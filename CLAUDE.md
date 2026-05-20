@@ -64,10 +64,10 @@ Manages 500+ organizational databases. Database names follow pattern `{type}_{or
 |------|----------------|-------------|
 | `Public_360` | — | Ärendehandlingar (20 tabeller + 7 dolda) |
 | `aveny` | `database-aveny-type` | Ekonomihandlingar |
-| `lonehandlingar` | — | Lonehandlingar |
-| `hrm` | `database-hrm-type`, `query-hrm-type-*`, `row-hrm-type-*` | HR Personalsystem med personsok, reserakningar, tidsredovisning och dokumentservering |
+| `lonehandlingar` | `database-lonehandlingar-type`, `query-lonehandlingar-type-*`, `row-lonehandlingar-type-*` | Lönehandlingar med personsök, periodsök, lönespecifikationer |
+| `hrm` | `database-hrm-type`, `query-hrm-type-*`, `row-hrm-type-*` | HR Personalsystem med personsök, reseräkningar, tidsredovisning och dokumentservering |
 
-HRM-typen har per-query och per-row template-mappningar i `database_types.json` under `templates.queries` och `templates.rows`.
+HRM- och lonehandlingar-typerna har per-query och per-row template-mappningar i `database_types.json` under `templates.queries` och `templates.rows`.
 
 ### Template Helper Functions (available in Jinja2)
 
@@ -81,8 +81,9 @@ HRM-typen har per-query och per-row template-mappningar i `database_types.json` 
 `register_routes` hook provides:
 - `/{database}/dokument/{id}` - Serve documents from `AnstallningDokument` table
 - `/{database}/bilaga/{id}` - Serve attachments from `Bilaga` table
+- `/{database}/lonespec/{lonekorning_id}` - Serve salary specification HTML from `lonekorningar.lonespec` column
 
-Auto-detects content type from magic bytes (PDF, images, Office docs).
+Dokument/bilaga auto-detects content type from magic bytes (PDF, images, Office docs). Lonespec serverar HTML-innehåll direkt (kräver URL-encoding av ID pga specialtecken).
 
 ### SQLite Metadata Database
 
