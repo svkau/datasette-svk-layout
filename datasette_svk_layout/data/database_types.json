@@ -567,26 +567,47 @@
   "lonehandlingar": {
     "title_template": "Lönehandlingar - {unit_name}",
     "description_template": "Arkiverade uttag från lönesystem",
+    "templates": {
+      "database": "database-lonehandlingar-type.html",
+      "queries": {
+        "Personer": "query-lonehandlingar-type-Personer.html",
+        "Lonekorningar": "query-lonehandlingar-type-Lonekorningar.html",
+        "AnstallningLonekorningar": "query-lonehandlingar-type-AnstallningLonekorningar.html"
+      },
+      "rows": {
+        "anstallningar": "row-lonehandlingar-type-anstallningar.html"
+      }
+    },
     "queries": {
-      "query1": {
+      "Personer": {
         "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
+          "permissions": ["access.search_salaries", "access.search_everything"]
         },
-        "sql": "SELECT * FROM anstallningar LIMIT 10",
-        "title": "TEST-fråga - {unit_name}",
-        "description": "Det här är en testfråga som visar 10 anställningar."
+        "sql": "SELECT fornamn || ' ' || efternamn AS Namn, personnummer AS Personnummer, anstallningsnummer AS Anstallningsnummer, befattning AS Befattning, anstallning_id AS AnstallningID FROM anstallningar WHERE fornamn || ' ' || efternamn LIKE '%' || :text || '%' OR personnummer LIKE '%' || :text || '%' OR CAST(anstallningsnummer AS TEXT) LIKE '%' || :text || '%' ORDER BY efternamn, fornamn",
+        "title": "Sök anställd",
+        "hide_sql": true
+      },
+      "Lonekorningar": {
+        "allow": {
+          "permissions": ["access.search_salaries", "access.search_everything"]
+        },
+        "sql": "SELECT lk.fornamn || ' ' || lk.efternamn AS Namn, lk.personnummer AS Personnummer, lk.anstallningsnummer AS Anstallningsnummer, lk.lonekorningsnummer AS Period, lk.utbetalningsdatum AS Utbetalningsdatum, lk.anstallning_id AS AnstallningID, lk.lonekorning_id AS LonekorningID FROM lonekorningar lk WHERE lk.lonekorningsnummer = :period ORDER BY lk.efternamn, lk.fornamn",
+        "title": "Lönekörningar per period",
+        "hide_sql": true
+      },
+      "AnstallningLonekorningar": {
+        "allow": {
+          "permissions": ["access.search_salaries", "access.search_everything"]
+        },
+        "sql": "SELECT 1",
+        "title": "Lönekörningar",
+        "hide_sql": true
       }
     },
     "tables": {
       "anstallningar": {
         "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
+          "permissions": ["access.search_salaries", "access.search_everything"]
         },
         "title": "Anställningar",
         "description": "Anställningar i {unit_name}",
@@ -617,7 +638,7 @@
           },
           "personalkategori": {
             "title": "Personalkategori",
-            "description": "Den asnställdes personalkategori"
+            "description": "Den anställdes personalkategori"
           },
           "befattning": {
             "title": "Befattning",
@@ -654,132 +675,67 @@
         }
       },
       "anstallningsperioder": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Anställningsperioder",
         "description": "Information om perioder då en anställning har pågått."
       },
       "arbetsgivare": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Arbetsgivare",
         "description": "Information om arbetsgivaren"
       },
       "arbetsmatt_heltid": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Arbetsmått - Heltid",
         "description": "Arbetsmått motsvarande heltid för respektive anställning."
       },
       "formelvariabler": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Formelvariabler",
         "description": "De variabler som systemet använder för att göra uträkningar"
       },
       "kostnadsfordelningar": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Kostnadsfördelningar",
         "description": "Kostnadsfördelningar per anställning"
       },
       "lonearter": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Lönearter",
-        "description": "Information om de lönearter som används i löneredovinsingen"
+        "description": "Information om de lönearter som används i löneredovisningen"
       },
       "lonekorningar": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Lönekörningar",
         "description": "Förteckning över månatliga lönekörningar inklusive lönespecifikationer."
       },
       "lonetillagg": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Lönetillägg",
         "description": "Information om lönetillägg kopplade till respektive anställning."
       },
       "lonetransaktion_konteringar": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Lönetransaktioner - konteringar",
         "description": "Enskilda konteringar per respektive lönetransaktion"
       },
       "lonetransaktioner": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Lönetransaktioner",
         "description": "Enskilda lönetransaktioner kopplade till anställning och lönekörning"
       },
       "manadsloner": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Månadslöner",
         "description": "Anställdas månadslöner motsvarande heltids sysselsättning"
       },
       "sysselsattningsgrader": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Sysselsättningsgrader",
         "description": "Anställdas sysselsättningsgrader i procent av heltid"
       },
       "timloner": {
-        "allow": {
-          "permissions": [
-            "access.search_salaries",
-            "access.search_everything"
-          ]
-        },
+        "allow": { "permissions": ["access.search_admin"] },
         "title": "Timlöner",
         "description": "Information om anställdas timlöner"
       }

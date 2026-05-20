@@ -1,0 +1,172 @@
+{% extends "row.html" %}
+
+{% block title %}Anställning {{ display_rows[0].anstallningsnummer or display_rows[0].anstallning_id }}{% endblock %}
+
+{% block content %}
+{% set row = display_rows[0] %}
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+
+    {# Breadcrumb #}
+    <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+        <a href="{{ urls.database(database) }}">Startsida</a> /
+        <span>{{ row.fornamn }} {{ row.efternamn }}</span>
+    </nav>
+
+    {# Header med personinformation #}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
+        <h1 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 2rem;">
+            {{ row.fornamn }} {{ row.efternamn }}
+        </h1>
+        <p style="color: var(--text-secondary); margin: 0 0 1rem 0; font-size: 1.1rem;">
+            Anställningsnummer: <strong>{{ row.anstallningsnummer or "—" }}</strong>
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">Personnummer</span>
+                <div style="font-weight: 500;">{{ row.personnummer or "—" }}</div>
+            </div>
+            <div>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">Befattning</span>
+                <div style="font-weight: 500;">{{ row.befattning or "—" }}</div>
+            </div>
+            <div>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">Personalkategori</span>
+                <div style="font-weight: 500;">{{ row.personalkategori or "—" }}</div>
+            </div>
+            <div>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">Utbetalningsgrupp</span>
+                <div style="font-weight: 500;">{{ row.utbetalningsgrupp_namn or "—" }}</div>
+            </div>
+            {% if row.bksk_klartext %}
+            <div>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">BKSK</span>
+                <div style="font-weight: 500;">{{ row.bksk_klartext }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Sammanfattning av lönekörningar #}
+    {% set lk_stats = sql("SELECT COUNT(*) as antal, MIN(lonekorningsnummer) as forsta, MAX(lonekorningsnummer) as senaste FROM lonekorningar WHERE anstallning_id = :id", {"id": row.anstallning_id}) %}
+    {% set s = lk_stats[0] if lk_stats else None %}
+
+    {# Aktuell månadslön #}
+    {% set lon = sql("SELECT manadslon_heltid_sek, startdatum, slutdatum FROM manadsloner WHERE anstallning_id = :id ORDER BY startdatum DESC LIMIT 1", {"id": row.anstallning_id}) %}
+
+    {# Sysselsättningsgrad #}
+    {% set syss = sql("SELECT sysselsattningsgrad, startdatum, slutdatum FROM sysselsattningsgrader WHERE anstallning_id = :id ORDER BY startdatum DESC LIMIT 1", {"id": row.anstallning_id}) %}
+
+    {# Kort med nyckeltal #}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        {% if s and s.antal > 0 %}
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary-color);">{{ s.antal }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Lönekörningar</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">{{ s.forsta }} – {{ s.senaste }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Perioder</div>
+        </div>
+        {% endif %}
+        {% if lon and lon[0].manadslon_heltid_sek %}
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">{{ "%.0f"|format(lon[0].manadslon_heltid_sek|float) }} kr</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Månadslön (heltid)</div>
+        </div>
+        {% endif %}
+        {% if syss and syss[0].sysselsattningsgrad is not none %}
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary-color);">{{ syss[0].sysselsattningsgrad }}%</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Sysselsättningsgrad</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Anställningsperioder #}
+    {% set perioder = sql("SELECT * FROM anstallningsperioder WHERE anstallning_id = :id ORDER BY periodstart DESC", {"id": row.anstallning_id}) %}
+    {% if perioder %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem;">
+        <h2 style="margin: 0 0 1rem 0; color: var(--primary-color); font-size: 1.2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+            Anställningsperioder ({{ perioder|length }})
+        </h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead>
+                <tr style="background: var(--background);">
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Startdatum</th>
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Slutdatum</th>
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Anställningsform</th>
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Löneform</th>
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Avslutsorsak</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in perioder %}
+                <tr>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ p.periodstart[:10] if p.periodstart else "—" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ p.periodslut[:10] if p.periodslut else "Pågående" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ p.anstallningsform or "—" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ p.loneform or "—" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ p.avslutsorsak or "—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {# Lönetillägg #}
+    {% set tillagg = sql("SELECT * FROM lonetillagg WHERE anstallning_id = :id ORDER BY startdatum DESC", {"id": row.anstallning_id}) %}
+    {% if tillagg %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem;">
+        <h2 style="margin: 0 0 1rem 0; color: var(--primary-color); font-size: 1.2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+            Lönetillägg ({{ tillagg|length }})
+        </h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead>
+                <tr style="background: var(--background);">
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Löneart</th>
+                    <th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">Belopp</th>
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Startdatum</th>
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Slutdatum</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tillagg %}
+                <tr>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.loneart_namn or t.loneart_kod or "—" }}</td>
+                    <td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); font-weight: 500;">{{ t.belopp_sek or "—" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.startdatum[:10] if t.startdatum else "—" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.slutdatum[:10] if t.slutdatum else "—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {# Länk till lönekörningar #}
+    <div style="margin-bottom: 2rem;">
+        <a href="{{ urls.query(database, 'AnstallningLonekorningar') }}?anstallning_id={{ row.anstallning_id }}"
+           style="display: block; background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; text-decoration: none; transition: box-shadow 0.2s;">
+            <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color); font-size: 1.2rem;">
+                Visa lönekörningar
+            </h3>
+            <p style="margin: 0; color: var(--text-secondary);">
+                {% if s and s.antal > 0 %}
+                {{ s.antal }} lönekörningar ({{ s.forsta }} – {{ s.senaste }}) med detaljerade transaktioner
+                {% else %}
+                Visa alla lönekörningar och transaktioner för denna anställning
+                {% endif %}
+            </p>
+        </a>
+    </div>
+
+    {# Footer med länkar #}
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+        <p>
+            <a href="{{ urls.database(database) }}" style="color: var(--primary-color); margin: 0 1rem;">Startsida</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}
