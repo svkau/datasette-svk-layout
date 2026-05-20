@@ -35,7 +35,7 @@
     {% if anstallning_id %}
 
     {# Hämta lönekörningar #}
-    {% set korningar = sql("SELECT lk.*, (SELECT COUNT(*) FROM lonetransaktioner lt WHERE lt.lonekorning_id = lk.lonekorning_id) AS antal_transaktioner, (SELECT SUM(CAST(lt.belopp_sek AS REAL)) FROM lonetransaktioner lt WHERE lt.lonekorning_id = lk.lonekorning_id AND lt.loneart_kod NOT IN (SELECT loneart_kod FROM lonearter WHERE loneart_kod >= 900)) AS brutto_summa FROM lonekorningar lk WHERE lk.anstallning_id = :anstallning_id ORDER BY lk.lonekorningsnummer DESC", {"anstallning_id": anstallning_id}) %}
+    {% set korningar = sql("SELECT lk.lonekorning_id, lk.anstallning_id, lk.personnummer, lk.anstallningsnummer, lk.lonekorningsnummer, lk.utbetalningsdatum, lk.fornamn, lk.efternamn, CASE WHEN lk.lonespec IS NOT NULL AND lk.lonespec != '' THEN 1 ELSE 0 END AS har_lonespec, (SELECT COUNT(*) FROM lonetransaktioner lt WHERE lt.lonekorning_id = lk.lonekorning_id) AS antal_transaktioner FROM lonekorningar lk WHERE lk.anstallning_id = :anstallning_id ORDER BY lk.lonekorningsnummer DESC", {"anstallning_id": anstallning_id}) %}
 
     {# Sammanfattning #}
     {% if korningar %}
@@ -70,8 +70,14 @@
                         Utbetalning: {{ lk.utbetalningsdatum[:10] if lk.utbetalningsdatum else "—" }}
                     </span>
                 </div>
-                <div style="font-size: 0.9rem; opacity: 0.9;">
-                    {{ lk.antal_transaktioner or 0 }} transaktioner
+                <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; opacity: 0.9;">
+                    <span>{{ lk.antal_transaktioner or 0 }} transaktioner</span>
+                    {% if lk.har_lonespec %}
+                    <a href="/{{ database }}/lonespec/{{ lk.lonekorning_id }}" target="_blank"
+                       style="background: rgba(255,255,255,0.2); color: white; padding: 0.2rem 0.6rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.8rem;">
+                        Visa lönespecifikation
+                    </a>
+                    {% endif %}
                 </div>
             </div>
 

@@ -512,6 +512,32 @@ async def serve_bilaga(scope, receive, datasette, request):
     )
 
 
+async def serve_lonespec(scope, receive, datasette, request):
+    database = request.url_vars["database"]
+    lonekorning_id = request.url_vars["lonekorning_id"]
+
+    db = datasette.get_database(database)
+    result = await db.execute(
+        "SELECT lonespec, fornamn, efternamn, lonekorningsnummer FROM lonekorningar WHERE lonekorning_id = :id",
+        {"id": lonekorning_id}
+    )
+    row = result.first()
+
+    if not row or not row["lonespec"]:
+        return Response.text("Lönespecifikation hittades inte", status=404)
+
+    html_content = row["lonespec"]
+    if isinstance(html_content, bytes):
+        html_content = html_content.decode("utf-8")
+
+    return Response(
+        body=html_content,
+        status=200,
+        headers={"Content-Type": "text/html; charset=utf-8"},
+        content_type="text/html; charset=utf-8",
+    )
+
+
 @hookimpl
 def register_routes():
     from datasette_svk_layout.admin_routes import (
@@ -523,6 +549,7 @@ def register_routes():
     return [
         (r"^/(?P<database>[^/]+)/dokument/(?P<doc_id>[^/]+)$", serve_document),
         (r"^/(?P<database>[^/]+)/bilaga/(?P<bilaga_id>[^/]+)$", serve_bilaga),
+        (r"^/(?P<database>[^/]+)/lonespec/(?P<lonekorning_id>.+)$", serve_lonespec),
         (r"^/-/admin/databases$", admin_databases),
         (r"^/-/admin/databases/(?P<database_name>[^/]+)/delete$", admin_database_delete),
         (r"^/-/admin/databases/(?P<database_name>[^/]+)$", admin_database_edit),
