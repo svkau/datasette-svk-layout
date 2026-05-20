@@ -513,8 +513,9 @@ async def serve_bilaga(scope, receive, datasette, request):
 
 
 async def serve_lonespec(scope, receive, datasette, request):
+    from urllib.parse import unquote
     database = request.url_vars["database"]
-    lonekorning_id = request.url_vars["lonekorning_id"]
+    lonekorning_id = unquote(request.url_vars["lonekorning_id"])
 
     db = datasette.get_database(database)
     result = await db.execute(

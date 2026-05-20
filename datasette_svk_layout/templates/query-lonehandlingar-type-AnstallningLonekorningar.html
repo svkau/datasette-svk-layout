@@ -73,7 +73,7 @@
                 <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; opacity: 0.9;">
                     <span>{{ lk.antal_transaktioner or 0 }} transaktioner</span>
                     {% if lk.har_lonespec %}
-                    <a href="/{{ database }}/lonespec/{{ lk.lonekorning_id }}" target="_blank"
+                    <a href="/{{ database }}/lonespec/{{ lk.lonekorning_id|urlencode }}" target="_blank"
                        style="background: rgba(255,255,255,0.2); color: white; padding: 0.2rem 0.6rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.8rem;">
                         Visa lönespecifikation
                     </a>
