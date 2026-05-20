@@ -51,10 +51,10 @@
     {% set s = lk_stats[0] if lk_stats else None %}
 
     {# Aktuell månadslön #}
-    {% set lon = sql("SELECT manadslon_heltid_sek, startdatum, slutdatum FROM manadsloner WHERE anstallning_id = :id ORDER BY startdatum DESC LIMIT 1", {"id": row.anstallning_id}) %}
+    {% set lon = sql("SELECT manadslon_heltid_sek, manadslon_heltid_sek_startdatum, manadslon_heltid_sek_slutdatum FROM manadsloner WHERE anstallning_id = :id ORDER BY manadslon_heltid_sek_startdatum DESC LIMIT 1", {"id": row.anstallning_id}) %}
 
     {# Sysselsättningsgrad #}
-    {% set syss = sql("SELECT sysselsattningsgrad, startdatum, slutdatum FROM sysselsattningsgrader WHERE anstallning_id = :id ORDER BY startdatum DESC LIMIT 1", {"id": row.anstallning_id}) %}
+    {% set syss = sql("SELECT sysselsattningsgrad, sysselsattningsgrad_startdatum, sysselsattningsgrad_slutdatum FROM sysselsattningsgrader WHERE anstallning_id = :id ORDER BY sysselsattningsgrad_startdatum DESC LIMIT 1", {"id": row.anstallning_id}) %}
 
     {# Kort med nyckeltal #}
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
@@ -115,7 +115,7 @@
     {% endif %}
 
     {# Lönetillägg #}
-    {% set tillagg = sql("SELECT * FROM lonetillagg WHERE anstallning_id = :id ORDER BY startdatum DESC", {"id": row.anstallning_id}) %}
+    {% set tillagg = sql("SELECT * FROM lonetillagg WHERE anstallning_id = :id ORDER BY lonetillagg_startdatum DESC", {"id": row.anstallning_id}) %}
     {% if tillagg %}
     <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem;">
         <h2 style="margin: 0 0 1rem 0; color: var(--primary-color); font-size: 1.2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
@@ -124,8 +124,8 @@
         <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
             <thead>
                 <tr style="background: var(--background);">
-                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Löneart</th>
-                    <th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">Belopp</th>
+                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Namn</th>
+                    <th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">Värde</th>
                     <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Startdatum</th>
                     <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Slutdatum</th>
                 </tr>
@@ -133,10 +133,10 @@
             <tbody>
                 {% for t in tillagg %}
                 <tr>
-                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.loneart_namn or t.loneart_kod or "—" }}</td>
-                    <td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); font-weight: 500;">{{ t.belopp_sek or "—" }}</td>
-                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.startdatum[:10] if t.startdatum else "—" }}</td>
-                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.slutdatum[:10] if t.slutdatum else "—" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.lonetillagg_namn or "—" }}</td>
+                    <td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); font-weight: 500;">{{ t.lonetillagg_varde or "—" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.lonetillagg_startdatum[:10] if t.lonetillagg_startdatum else "—" }}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">{{ t.lonetillagg_slutdatum[:10] if t.lonetillagg_slutdatum else "—" }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
