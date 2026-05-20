@@ -1,0 +1,141 @@
+{% extends "query.html" %}
+
+{% block title %}Lönekörningar{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+
+    {% set anstallning_id = request.args.get('anstallning_id', '') %}
+
+    {# Hämta anställningsuppgifter #}
+    {% set anst_query = sql("SELECT * FROM anstallningar WHERE anstallning_id = :id", {"id": anstallning_id}) %}
+    {% set anst = anst_query[0] if anst_query else None %}
+
+    {# Breadcrumb #}
+    <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+        <a href="{{ urls.database(database) }}">Startsida</a> /
+        {% if anst %}
+        <a href="{{ urls.row(database, 'anstallningar', anstallning_id) }}">{{ anst.fornamn }} {{ anst.efternamn }}</a> /
+        {% endif %}
+        <span>Lönekörningar</span>
+    </nav>
+
+    {# Header #}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
+        <h1 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 2rem;">
+            Lönekörningar
+        </h1>
+        {% if anst %}
+        <p style="color: var(--text-secondary); margin: 0; font-size: 1.1rem;">
+            {{ anst.fornamn }} {{ anst.efternamn }} (Anst.nr: {{ anst.anstallningsnummer or "—" }})
+        </p>
+        {% endif %}
+    </div>
+
+    {% if anstallning_id %}
+
+    {# Hämta lönekörningar #}
+    {% set korningar = sql("SELECT lk.lonekorning_id, lk.anstallning_id, lk.personnummer, lk.anstallningsnummer, lk.lonekorningsnummer, lk.utbetalningsdatum, lk.fornamn, lk.efternamn, CASE WHEN lk.lonespec IS NOT NULL AND lk.lonespec != '' THEN 1 ELSE 0 END AS har_lonespec, (SELECT COUNT(*) FROM lonetransaktioner lt WHERE lt.lonekorning_id = lk.lonekorning_id) AS antal_transaktioner FROM lonekorningar lk WHERE lk.anstallning_id = :anstallning_id ORDER BY lk.lonekorningsnummer DESC", {"anstallning_id": anstallning_id}) %}
+
+    {# Sammanfattning #}
+    {% if korningar %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary-color);">{{ korningar|length }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Lönekörningar</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">{{ korningar[-1].lonekorningsnummer if korningar else "—" }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Första period</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; text-align: center;">
+            <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">{{ korningar[0].lonekorningsnummer if korningar else "—" }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Senaste period</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Varje lönekörning som ett kort #}
+    {% if korningar %}
+        {% for lk in korningar %}
+        <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; margin-bottom: 1rem; overflow: hidden;">
+
+            {# Körnings-header #}
+            <div style="background: var(--primary-color); color: white; padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h3 style="margin: 0; font-size: 1.1rem; color: white;">
+                        {{ lk.lonekorningsnummer or "—" }}
+                    </h3>
+                    <span style="font-size: 0.9rem; opacity: 0.9;">
+                        Utbetalning: {{ lk.utbetalningsdatum[:10] if lk.utbetalningsdatum else "—" }}
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; opacity: 0.9;">
+                    <span>{{ lk.antal_transaktioner or 0 }} transaktioner</span>
+                    {% if lk.har_lonespec %}
+                    <a href="/{{ database }}/lonespec/{{ lk.lonekorning_id|urlencode }}" target="_blank"
+                       style="background: rgba(255,255,255,0.2); color: white; padding: 0.2rem 0.6rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.8rem;">
+                        Visa lönespecifikation
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Transaktioner för denna körning #}
+            {% set transaktioner = sql("SELECT lt.loneart_kod, lt.loneart_namn, lt.belopp_sek, lt.antal, lt.enhet, lt.apris, lt.datumstart, lt.datumslut FROM lonetransaktioner lt WHERE lt.lonekorning_id = :lk_id ORDER BY lt.loneart_kod", {"lk_id": lk.lonekorning_id}) %}
+
+            {% if transaktioner %}
+            <div style="padding: 1rem 1.25rem;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; line-height: 1.2;">
+                    <thead>
+                        <tr style="background: var(--background);">
+                            <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color); width: 60px;">Kod</th>
+                            <th style="padding: 0.25rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Löneart</th>
+                            <th style="padding: 0.25rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); width: 60px;">Antal</th>
+                            <th style="padding: 0.25rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); width: 100px;">Belopp (SEK)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tr in transaktioner %}
+                        <tr>
+                            <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color); font-family: monospace;">{{ tr.loneart_kod }}</td>
+                            <td style="padding: 0.2rem 0.5rem; border-bottom: 1px solid var(--border-color);">{{ tr.loneart_namn or "—" }}</td>
+                            <td style="padding: 0.2rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); font-family: monospace;">{{ tr.antal or "" }}</td>
+                            <td style="padding: 0.2rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); font-weight: 500; font-family: monospace;">{{ tr.belopp_sek or "—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding: 1rem 1.25rem; color: var(--text-secondary); font-style: italic;">
+                Inga transaktioner registrerade.
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+    {% else %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; text-align: center;">
+        <p style="color: var(--text-secondary); margin: 0;">Inga lönekörningar för denna anställning.</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; text-align: center;">
+        <p style="color: var(--text-secondary); margin: 0;">Ingen anställning vald. Gå till en anställning för att se lönekörningar.</p>
+    </div>
+    {% endif %}
+
+    {# Footer med länkar #}
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+        <p>
+            {% if anst %}
+            <a href="{{ urls.row(database, 'anstallningar', anstallning_id) }}" style="color: var(--primary-color); margin: 0 1rem;">Tillbaka till anställning</a>
+            {% endif %}
+            <a href="{{ urls.database(database) }}" style="color: var(--primary-color); margin: 0 1rem;">Startsida</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}
