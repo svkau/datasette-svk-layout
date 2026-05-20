@@ -76,7 +76,7 @@ Typdefinitioner i `datasette_svk_layout/data/database_types.json` styr:
 | `Public_360` | Ärendehandlingar från ärendehanteringssystem |
 | `aveny` | Ekonomihandlingar |
 | `hrm` | HR-personalsystem med personsök, reseräkningar, tidsredovisning |
-| `lonehandlingar` | Lönehandlingar |
+| `lonehandlingar` | Lönehandlingar med personsök, periodsök, lönespecifikationer |
 
 ### Organisationsregister
 
@@ -160,10 +160,21 @@ python -m datasette_svk_layout.migrate_metadata [metadata_path] [db_path]
 
 Pluginet registrerar routes för att servera filer direkt från databasen:
 
-- `/{database}/dokument/{id}` — Dokument från `AnstallningDokument`-tabellen
-- `/{database}/bilaga/{id}` — Bilagor från `Bilaga`-tabellen
+- `/{database}/dokument/{id}` — Dokument från `AnstallningDokument`-tabellen (HRM)
+- `/{database}/bilaga/{id}` — Bilagor från `Bilaga`-tabellen (HRM)
+- `/{database}/lonespec/{lonekorning_id}` — Lönespecifikation som HTML från `lonekorningar.lonespec`-kolumnen (lonehandlingar)
 
-Innehållstyp detekteras automatiskt från filens magic bytes (PDF, bilder, Office-dokument).
+Dokument och bilagor: innehållstyp detekteras automatiskt från filens magic bytes (PDF, bilder, Office-dokument). Lönespecifikationer serveras som HTML direkt i webbläsaren.
+
+### Lonehandlingar — anpassade sökgränssnitt
+
+Lonehandlingar-typen har fem anpassade templates:
+
+- **Startsida** (`database-lonehandlingar-type`) — Två sökvägar: personsök och periodsök (ÅÅÅÅ-MM)
+- **Personsök** (`query-lonehandlingar-type-Personer`) — Sök på namn, personnummer eller anställningsnummer
+- **Periodsök** (`query-lonehandlingar-type-Lonekorningar`) — Visa alla lönekörningar för en given månad
+- **Anställningsdetalj** (`row-lonehandlingar-type-anstallningar`) — Nyckeltal, anställningsperioder, lönetillägg
+- **Lönekörningar** (`query-lonehandlingar-type-AnstallningLonekorningar`) — Lönekörningar med transaktionsdetaljer och länk till lönespecifikation
 
 ## Template-hjälpfunktioner
 
