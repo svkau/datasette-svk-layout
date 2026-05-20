@@ -801,19 +801,114 @@
     },
     "queries": {
       "Personer": {
+        "allow": {
+          "permissions": ["access.search_salaries", "access.search_everything"]
+        },
         "sql": "SELECT a.Namn, a.Personnummer, b.Anstallningsnummer AS Anställningsnummer, a.Id AS PersonID, b.Id AS AnställningID FROM Person AS a INNER JOIN Anstallning AS b ON a.Id = b.PersonId WHERE a.Namn LIKE '%' || :text || '%' OR a.Personnummer LIKE '%' || :text || '%' OR b.Anstallningsnummer LIKE '%' || :text || '%' ORDER BY Efternamn",
         "title": "Sök anställd",
         "hide_sql": true
       },
       "AnstallningReserakningar": {
+        "allow": {
+          "permissions": ["access.search_salaries", "access.search_everything"]
+        },
         "sql": "SELECT 1",
         "title": "Reseräkningar & Utlägg",
         "hide_sql": true
       },
       "AnstallningTidsredovisning": {
+        "allow": {
+          "permissions": ["access.search_salaries", "access.search_everything"]
+        },
         "sql": "SELECT 1",
         "title": "Tidsredovisning",
         "hide_sql": true
+      }
+    },
+    "tables": {
+      "Anstallning": {
+        "allow": {
+          "permissions": ["access.search_salaries", "access.search_everything"]
+        },
+        "title": "Anställningar",
+        "description": "Anställningar kopplade till personer"
+      },
+      "Person": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Personer",
+        "description": "Personuppgifter"
+      },
+      "Reserakning": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Reseräkningar",
+        "description": "Reseräkningar"
+      },
+      "ReserakningUtlagg": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Utlägg på reseräkningar",
+        "description": "Enskilda utlägg kopplade till reseräkningar"
+      },
+      "Bilaga": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Bilagor",
+        "description": "Bifogade filer och kvitton"
+      },
+      "Tidrapportdag": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Tidrapportdagar",
+        "description": "Dagliga tidrapporter"
+      },
+      "Tidrad": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Tidrader",
+        "description": "Enskilda tidsregistreringar"
+      },
+      "Tidkod": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Tidkoder",
+        "description": "Koder för olika typer av tid"
+      },
+      "AnstallningDokument": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Anställningsdokument",
+        "description": "Dokument kopplade till anställningar"
+      },
+      "AnstallningDokumentKategori": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Dokumentkategorier",
+        "description": "Kategorier för anställningsdokument"
+      },
+      "AnstallningAckumulatorvarde": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Ackumulatorvärden",
+        "description": "Ackumulerade värden för semester, övertid m.m."
+      },
+      "Utlagg": {
+        "allow": {
+          "permissions": ["access.search_admin"]
+        },
+        "title": "Utläggstyper",
+        "description": "Typer av utlägg"
       }
     }
   }
