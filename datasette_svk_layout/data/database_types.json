@@ -591,8 +591,8 @@
         "allow": {
           "permissions": ["access.search_salaries", "access.search_everything"]
         },
-        "sql": "SELECT lk.fornamn || ' ' || lk.efternamn AS Namn, lk.personnummer AS Personnummer, lk.anstallningsnummer AS Anstallningsnummer, lk.lonekorningsnummer AS Period, lk.utbetalningsdatum AS Utbetalningsdatum, lk.anstallning_id AS AnstallningID, lk.lonekorning_id AS LonekorningID FROM lonekorningar lk WHERE lk.lonekorningsnummer = :period ORDER BY lk.efternamn, lk.fornamn",
-        "title": "Lönekörningar per period",
+        "sql": "SELECT lt.loneart_kod AS Loneart_kod, lt.loneart_namn AS Loneart, lt.belopp_sek AS Belopp, lt.antal AS Antal, lt.enhet AS Enhet, lt.apris AS Apris, lt.transaktionsrad_text AS Text, lk.fornamn || ' ' || lk.efternamn AS Namn, lk.anstallningsnummer AS Anstallningsnummer, lk.anstallning_id AS AnstallningID, ltk.dim01_varde AS Konto, ltk.dim02_varde AS Kostnadsstalle FROM lonetransaktioner lt JOIN lonekorningar lk ON lt.lonekorning_id = lk.lonekorning_id LEFT JOIN lonetransaktion_konteringar ltk ON lt.lonetransaktion_id = ltk.lonetransaktion_id WHERE lk.lonekorningsnummer = :period ORDER BY lk.efternamn, lk.fornamn, lt.loneart_kod",
+        "title": "Lönetransaktioner per period",
         "hide_sql": true
       },
       "AnstallningLonekorningar": {

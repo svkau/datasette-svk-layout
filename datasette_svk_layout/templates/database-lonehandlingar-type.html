@@ -91,8 +91,8 @@
     </div>
 
     <div class="search-section">
-        <h2>Lönekörningar per period</h2>
-        <p>Ange en period (ÅÅÅÅ-MM) för att visa alla lönekörningar</p>
+        <h2>Lönetransaktioner per period</h2>
+        <p>Ange en period (ÅÅÅÅ-MM) för att visa lönetransaktioner med konteringar</p>
         <form class="search-form" action="{{ urls.query(database, 'Lonekorningar') }}" method="get">
             <input type="text" name="period" placeholder="T.ex. 2020-06" pattern="\d{4}-\d{2}" style="max-width: 200px;">
             <button type="submit">Visa</button>

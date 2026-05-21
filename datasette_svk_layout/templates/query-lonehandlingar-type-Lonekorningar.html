@@ -9,7 +9,7 @@
     border-radius: 0.5rem;
     overflow: hidden;
     box-shadow: var(--shadow);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     line-height: 1.3;
 }
 
@@ -19,7 +19,8 @@
     padding: 0.35rem 0.6rem;
     text-align: left;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 .results-table tbody tr {
@@ -29,6 +30,7 @@
 
 .results-table tbody tr:hover { background: var(--background); }
 .results-table tbody td { padding: 0.3rem 0.6rem; }
+.results-table tbody td.numeric { text-align: right; font-variant-numeric: tabular-nums; }
 
 .results-table tbody td a {
     color: var(--primary-color);
@@ -85,25 +87,58 @@
 
 .search-form button:hover { background: var(--primary-dark); }
 
-.results-count {
+.summary-cards {
+    display: flex;
+    gap: 1rem;
     margin: 1.5rem 0;
+    flex-wrap: wrap;
+}
+
+.summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1rem 1.5rem;
+    flex: 1;
+    min-width: 150px;
+}
+
+.summary-card .label {
+    font-size: 0.85rem;
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.summary-card .value {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.employee-group {
+    font-weight: 600;
+    background: var(--background);
+}
+
+.employee-group td {
+    padding-top: 0.6rem !important;
+    padding-bottom: 0.4rem !important;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+<div class="container" style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
 
     <nav class="breadcrumb" style="margin-bottom: 1.5rem; color: var(--text-secondary);">
         <a href="{{ urls.database(database) }}" style="color: var(--primary-color); text-decoration: none;">Startsida</a>
     </nav>
 
     <div class="search-header">
-        <h1>Lönekörningar per period</h1>
+        <h1>Lönetransaktioner per period</h1>
         <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">
-            Ange en period (ÅÅÅÅ-MM) för att visa alla lönekörningar
+            Ange en period (ÅÅÅÅ-MM) för att visa alla lönetransaktioner med konteringar
         </p>
 
         <form class="search-form" action="{{ request.path }}" method="get">
@@ -113,44 +148,96 @@
     </div>
 
     {% if rows %}
-        <div class="results-count">
-            <strong>{{ rows|length }}</strong> lönekörning{% if rows|length != 1 %}ar{% endif %} för period {{ request.args.get('period', '') }}
+        {% set ns = namespace(total_brutto=0, total_netto=0, employees=[], row_count=0) %}
+        {% for row in rows %}
+            {% set amount = row["Belopp"]|float(0) %}
+            {% if amount > 0 %}
+                {% set ns.total_brutto = ns.total_brutto + amount %}
+            {% endif %}
+            {% set ns.total_netto = ns.total_netto + amount %}
+            {% if row["Namn"] not in ns.employees %}
+                {% set ns.employees = ns.employees + [row["Namn"]] %}
+            {% endif %}
+            {% set ns.row_count = ns.row_count + 1 %}
+        {% endfor %}
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="label">Period</div>
+                <div class="value">{{ request.args.get('period', '') }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Anställda</div>
+                <div class="value">{{ ns.employees|length }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Transaktioner</div>
+                <div class="value">{{ ns.row_count }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Brutto</div>
+                <div class="value">{{ "{:,.0f}".format(ns.total_brutto).replace(",", " ") }} kr</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Netto</div>
+                <div class="value">{{ "{:,.0f}".format(ns.total_netto).replace(",", " ") }} kr</div>
+            </div>
         </div>
 
-        <div style="margin-top: 1rem;">
+        <div style="margin-top: 1rem; overflow-x: auto;">
             <table class="results-table">
                 <thead>
                     <tr>
-                        <th>Namn</th>
-                        <th>Personnummer</th>
+                        <th>Anställd</th>
                         <th>Anst.nr</th>
-                        <th>Period</th>
-                        <th>Utbetalningsdatum</th>
-                        <th>Anställning</th>
+                        <th>Löneart</th>
+                        <th>Benämning</th>
+                        <th>Text</th>
+                        <th>Antal</th>
+                        <th>Enhet</th>
+                        <th>À-pris</th>
+                        <th>Belopp</th>
+                        <th>Konto</th>
+                        <th>K-ställe</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% set current_employee = namespace(name="") %}
                     {% for row in rows %}
-                    <tr>
-                        <td><strong>{{ row["Namn"] or "—" }}</strong></td>
-                        <td>{{ row["Personnummer"] or "—" }}</td>
-                        <td>{{ row["Anstallningsnummer"] or "—" }}</td>
-                        <td>{{ row["Period"] or "—" }}</td>
-                        <td>{{ row["Utbetalningsdatum"][:10] if row["Utbetalningsdatum"] else "—" }}</td>
-                        <td><a href="{{ urls.row(database, 'anstallningar', row['AnstallningID']) }}">Visa</a></td>
-                    </tr>
+                        {% if row["Namn"] != current_employee.name %}
+                            {% set current_employee.name = row["Namn"] %}
+                            <tr class="employee-group">
+                                <td colspan="11">
+                                    <a href="{{ urls.row(database, 'anstallningar', row['AnstallningID']) }}">{{ row["Namn"] }}</a>
+                                    ({{ row["Anstallningsnummer"] or "—" }})
+                                </td>
+                            </tr>
+                        {% endif %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>{{ row["Loneart_kod"] or "" }}</td>
+                            <td>{{ row["Loneart"] or "" }}</td>
+                            <td>{{ row["Text"] or "" }}</td>
+                            <td class="numeric">{{ row["Antal"] if row["Antal"] and row["Antal"] != "0" else "" }}</td>
+                            <td>{{ row["Enhet"] or "" }}</td>
+                            <td class="numeric">{{ row["Apris"] if row["Apris"] and row["Apris"] != "0.00" else "" }}</td>
+                            <td class="numeric"><strong>{{ "{:,.2f}".format(row["Belopp"]|float(0)).replace(",", " ") }}</strong></td>
+                            <td>{{ row["Konto"] or "" }}</td>
+                            <td>{{ row["Kostnadsstalle"] or "" }}</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     {% elif request.args.get('period') %}
         <div class="no-results">
-            <p style="font-size: 1.2rem; margin: 0;">Inga lönekörningar hittades för period "{{ request.args.get('period') }}"</p>
+            <p style="font-size: 1.2rem; margin: 0;">Inga lönetransaktioner hittades för period "{{ request.args.get('period') }}"</p>
             <p style="margin-top: 0.5rem;">Kontrollera formatet (ÅÅÅÅ-MM, t.ex. 2020-06)</p>
         </div>
     {% else %}
         <div class="no-results">
-            <p style="font-size: 1.2rem; margin: 0;">Ange en period för att visa lönekörningar</p>
+            <p style="font-size: 1.2rem; margin: 0;">Ange en period för att visa lönetransaktioner</p>
         </div>
     {% endif %}
 
