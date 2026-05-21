@@ -250,7 +250,8 @@ def extra_template_vars(datasette, database):
         "get_formatted_table_info": get_formatted_table_info,
         "get_formatted_queries": get_formatted_queries,
         "get_column_label": get_column_label,
-        "get_query_description": get_query_desc
+        "get_query_description": get_query_desc,
+        "get_database_type_config": get_database_config
     }
 
 @hookimpl

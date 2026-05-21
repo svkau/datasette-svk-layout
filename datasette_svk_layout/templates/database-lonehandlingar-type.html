@@ -99,5 +99,25 @@
         </form>
     </div>
 
+    {% if actor and "access.search_everything" in (actor.permissions or []) %}
+    {% set db_config = get_database_type_config(database) %}
+    {% if db_config and db_config.tables %}
+    <div style="margin-top: 1rem; padding: 1.5rem 2rem; background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem;">
+        <h2 style="margin: 0 0 0.5rem 0; color: var(--primary-color); font-size: 1.2rem;">Alla tabeller</h2>
+        <p style="color: var(--text-secondary); margin: 0 0 1rem 0; font-size: 0.95rem;">Direkt åtkomst till databasens underliggande tabeller</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            {% for table_name, table_config in db_config.tables.items() %}
+            {% if not table_config.hidden %}
+            <a href="{{ urls.table(database, table_name) }}"
+               style="display: inline-block; padding: 0.3rem 0.8rem; background: var(--background); border: 1px solid var(--border-color); border-radius: 0.4rem; color: var(--primary-color); text-decoration: none; font-size: 0.9rem;">
+                {{ table_config.title or table_name }}
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
 </div>
 {% endblock %}

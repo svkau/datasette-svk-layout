@@ -675,67 +675,67 @@
         }
       },
       "anstallningsperioder": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Anställningsperioder",
         "description": "Information om perioder då en anställning har pågått."
       },
       "arbetsgivare": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Arbetsgivare",
         "description": "Information om arbetsgivaren"
       },
       "arbetsmatt_heltid": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Arbetsmått - Heltid",
         "description": "Arbetsmått motsvarande heltid för respektive anställning."
       },
       "formelvariabler": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Formelvariabler",
         "description": "De variabler som systemet använder för att göra uträkningar"
       },
       "kostnadsfordelningar": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Kostnadsfördelningar",
         "description": "Kostnadsfördelningar per anställning"
       },
       "lonearter": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Lönearter",
         "description": "Information om de lönearter som används i löneredovisningen"
       },
       "lonekorningar": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Lönekörningar",
         "description": "Förteckning över månatliga lönekörningar inklusive lönespecifikationer."
       },
       "lonetillagg": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Lönetillägg",
         "description": "Information om lönetillägg kopplade till respektive anställning."
       },
       "lonetransaktion_konteringar": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Lönetransaktioner - konteringar",
         "description": "Enskilda konteringar per respektive lönetransaktion"
       },
       "lonetransaktioner": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Lönetransaktioner",
         "description": "Enskilda lönetransaktioner kopplade till anställning och lönekörning"
       },
       "manadsloner": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Månadslöner",
         "description": "Anställdas månadslöner motsvarande heltids sysselsättning"
       },
       "sysselsattningsgrader": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Sysselsättningsgrader",
         "description": "Anställdas sysselsättningsgrader i procent av heltid"
       },
       "timloner": {
-        "allow": { "permissions": ["access.search_admin"] },
+        "allow": { "permissions": ["access.search_everything"] },
         "title": "Timlöner",
         "description": "Information om anställdas timlöner"
       }
@@ -791,77 +791,77 @@
       },
       "Person": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Personer",
         "description": "Personuppgifter"
       },
       "Reserakning": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Reseräkningar",
         "description": "Reseräkningar"
       },
       "ReserakningUtlagg": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Utlägg på reseräkningar",
         "description": "Enskilda utlägg kopplade till reseräkningar"
       },
       "Bilaga": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Bilagor",
         "description": "Bifogade filer och kvitton"
       },
       "Tidrapportdag": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Tidrapportdagar",
         "description": "Dagliga tidrapporter"
       },
       "Tidrad": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Tidrader",
         "description": "Enskilda tidsregistreringar"
       },
       "Tidkod": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Tidkoder",
         "description": "Koder för olika typer av tid"
       },
       "AnstallningDokument": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Anställningsdokument",
         "description": "Dokument kopplade till anställningar"
       },
       "AnstallningDokumentKategori": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Dokumentkategorier",
         "description": "Kategorier för anställningsdokument"
       },
       "AnstallningAckumulatorvarde": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Ackumulatorvärden",
         "description": "Ackumulerade värden för semester, övertid m.m."
       },
       "Utlagg": {
         "allow": {
-          "permissions": ["access.search_admin"]
+          "permissions": ["access.search_everything"]
         },
         "title": "Utläggstyper",
         "description": "Typer av utlägg"
