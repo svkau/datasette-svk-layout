@@ -112,6 +112,15 @@ Styr åtkomst till tabeller inom en databas. Konfigureras i `database_types.json
 
 Om alla tabeller kräver behörigheter och användaren saknar rätt roll, döljs databasen automatiskt.
 
+### Behörighetsroller
+
+| Roll | Beskrivning |
+|------|-------------|
+| `access.search_casefiles` | Åtkomst till ärendehandlingar (Public_360) |
+| `access.search_salaries` | Åtkomst till löne- och personaluppgifter (hrm, lonehandlingar) |
+| `access.search_everything` | Åtkomst till alla underliggande tabeller + tabellnavigering på startsidorna |
+| `access.search_admin` | Administratörsbehörighet (Admin-UI, SQL-körning) |
+
 ## SQLite metadata-databas
 
 `svk_metadata.db` lagrar metadata och behörigheter utan att behöva redigera `metadata.json`.
