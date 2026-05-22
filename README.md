@@ -73,7 +73,7 @@ Typdefinitioner i `datasette_svk_layout/data/database_types.json` styr:
 
 | Typ | Beskrivning |
 |-----|-------------|
-| `Public_360` | Ärendehandlingar från ärendehanteringssystem |
+| `Public_360` | Ärendehandlingar (ERMS) med ärendesök, handlingssök, diariesökning och sekretessfiltrering |
 | `aveny` | Ekonomihandlingar |
 | `hrm` | HR-personalsystem med personsök, reseräkningar, tidsredovisning |
 | `lonehandlingar` | Lönehandlingar med personsök, periodsök, lönespecifikationer |
@@ -116,7 +116,8 @@ Om alla tabeller kräver behörigheter och användaren saknar rätt roll, döljs
 
 | Roll | Beskrivning |
 |------|-------------|
-| `access.search_casefiles` | Åtkomst till ärendehandlingar (Public_360) |
+| `access.search_casefiles` | Åtkomst till ärendehandlingar med sekretessfiltrering (Public_360) |
+| `access.search_casefiles_confidentiality` | Full åtkomst till ärendehandlingar inkl. sekretessmarkerade (Public_360) |
 | `access.search_salaries` | Åtkomst till löne- och personaluppgifter (hrm, lonehandlingar) |
 | `access.search_everything` | Åtkomst till alla underliggande tabeller + tabellnavigering på startsidorna |
 | `access.search_admin` | Administratörsbehörighet (Admin-UI, SQL-körning) |
@@ -174,6 +175,24 @@ Pluginet registrerar routes för att servera filer direkt från databasen:
 - `/{database}/lonespec/{lonekorning_id}` — Lönespecifikation som HTML från `lonekorningar.lonespec`-kolumnen (lonehandlingar)
 
 Dokument och bilagor: innehållstyp detekteras automatiskt från filens magic bytes (PDF, bilder, Office-dokument). Lönespecifikationer serveras som HTML direkt i webbläsaren.
+
+### Public_360 — ärendehandlingar med sekretessfiltrering
+
+Public_360-typen bygger på Svenska kyrkans ERMS-anpassning och har sex anpassade templates:
+
+- **Startsida** (`database-Public_360-type`) — Tre sökvägar: fritextsök ärenden, diarielista, fritextsök handlingar
+- **Ärendesök** (`query-Public_360-type-SokArenden`) — Fritextsökning med sekretessfiltrering
+- **Handlingssök** (`query-Public_360-type-SokHandlingar`) — Fritextsökning med sekretessfiltrering
+- **Ärendedetalj** (`row-Public_360-type-aggregation`) — Aktörer, datum, nyckelord, handlingar, bilagor, sekretessmarkeringar
+- **Handlingsdetalj** (`row-Public_360-type-record`) — Aktörer, bilagor, länk till ärende
+- **Diarievy** (`row-Public_360-type-diary`) — Ärendelista med sökning inom diariet
+
+**Sekretessfiltrering:** Användare med `access.search_casefiles` (utan `_confidentiality`) ser sekretessmarkerade ärenden med maskerad titel ("Skyddat ärende"), maskerade aktörer ("Skyddad") och dolda handlingar. Användare med `access.search_casefiles_confidentiality` ser allt.
+
+**FTS-index för handlingar:** Record-tabellen behöver ett FTS5-index som skapas med:
+```bash
+python -m datasette_svk_layout.create_record_fts <db_path>
+```
 
 ### Lonehandlingar — anpassade sökgränssnitt
 
