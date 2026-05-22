@@ -1,0 +1,342 @@
+{% extends "row.html" %}
+
+{% block title %}Ärende {{ display_rows[0].objectId }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.detail-card h2 {
+    margin: 0 0 1rem 0;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-card h2 .count-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.detail-grid .field-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.detail-grid .field-value {
+    font-weight: 500;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.detail-table thead th {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.35rem 0.6rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.detail-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-table tbody tr:hover { background: var(--background); }
+
+.detail-table tbody td {
+    padding: 0.3rem 0.6rem;
+}
+
+.detail-table a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.detail-table a:hover { text-decoration: underline; }
+
+.confidential-badge {
+    display: inline-block;
+    background: #f0ad4e;
+    color: #fff;
+    padding: 0.15rem 0.6rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-closed { background: #e8e8e8; color: #666; }
+.status-open { background: #d4edda; color: #155724; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set row = display_rows[0] %}
+{% set has_confidentiality = actor and "access.search_casefiles_confidentiality" in (actor.permissions or []) %}
+{% set restrictions = sql("SELECT r.restrictionType, r.regulation FROM restriction r JOIN aggregationrestriction ar ON r.id = ar.restriction_id WHERE ar.aggregation_id = :id", {"id": row.objectId}) %}
+{% set is_confidential = row.confidential == 1 or restrictions|length > 0 %}
+
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+
+    <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+        <a href="{{ urls.database(database) }}">Startsida</a> /
+        <span>Ärende {{ row.objectId }}</span>
+    </nav>
+
+    {# Huvudkort #}
+    <div class="detail-card">
+        <h1 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.8rem;">
+            {{ row.objectId }}
+            {% if is_confidential %}
+            <span class="confidential-badge" style="font-size: 0.7rem; vertical-align: middle;">Sekretess</span>
+            {% endif %}
+        </h1>
+        <p style="color: var(--text-secondary); margin: 0 0 1.5rem 0; font-size: 1.2rem;">
+            {% if is_confidential and not has_confidentiality %}
+            Skyddat ärende
+            {% else %}
+            {{ row.title or "—" }}
+            {% endif %}
+        </p>
+
+        <div class="detail-grid">
+            {% if not is_confidential or has_confidentiality %}
+            <div>
+                <span class="field-label">Klassificering</span>
+                <div class="field-value">{{ row.classificationCode }} {{ row.classificationText or "" }}</div>
+            </div>
+            {% endif %}
+            <div>
+                <span class="field-label">Status</span>
+                <div class="field-value">
+                    {% if row.status == "closed" %}
+                    <span class="status-badge status-closed">Stängt</span>
+                    {% elif row.status %}
+                    <span class="status-badge status-open">{{ row.status }}</span>
+                    {% else %}—{% endif %}
+                </div>
+            </div>
+            <div>
+                <span class="field-label">Diarium</span>
+                <div class="field-value">{{ row.diary or "—" }}</div>
+            </div>
+            <div>
+                <span class="field-label">Öppnat</span>
+                <div class="field-value">{{ row.opened.split("T")[0] if row.opened else "—" }}</div>
+            </div>
+            <div>
+                <span class="field-label">Avslutat</span>
+                <div class="field-value">{{ row.closed.split("T")[0] if row.closed else "—" }}</div>
+            </div>
+        </div>
+
+        {% if (not is_confidential or has_confidentiality) and row.description %}
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+            <span class="field-label">Beskrivning</span>
+            <p style="margin: 0.25rem 0 0 0;">{{ row.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Aktörer #}
+    {% set agents = sql("SELECT ag.name, ag.idNumber, at.type AS agenttype FROM agents ag JOIN aggregationagent aa ON ag.id = aa.agent_id JOIN agenttypes at ON ag.type_id = at.id WHERE aa.aggregation_id = :id ORDER BY at.id", {"id": row.objectId}) %}
+    {% if agents|length > 0 %}
+    <div class="detail-card">
+        <h2>Aktörer <span class="count-badge">{{ agents|length }}</span></h2>
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th>Roll</th>
+                    <th>Namn</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set masked_types = ["sender", "receiver", "other", "counterpart"] %}
+                {% set role_labels = {"creator": "Skapare", "responsible_person": "Handläggare", "sender": "Avsändare", "receiver": "Mottagare", "other": "Övrig", "counterpart": "Motpart", "editor": "Redigerare"} %}
+                {% for agent in agents %}
+                <tr>
+                    <td>{{ role_labels.get(agent.agenttype, agent.agenttype) }}</td>
+                    {% if is_confidential and not has_confidentiality and agent.agenttype in masked_types %}
+                    <td><em>Skyddad</em></td>
+                    {% else %}
+                    <td>{{ agent.name }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {# Datum #}
+    {% set extra_dates = sql("SELECT dateType, date, aggregation_id, record_id FROM dates WHERE aggregation_id = :id ORDER BY date", {"id": row.objectId}) %}
+    {% if extra_dates|length > 0 %}
+    <div class="detail-card">
+        <h2>Datum <span class="count-badge">{{ extra_dates|length }}</span></h2>
+        {% set date_labels = {"created": "Skapat", "opened": "Öppnat", "closed": "Stängt", "originated": "Upprättat"} %}
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th>Typ</th>
+                    <th>Datum</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in extra_dates %}
+                <tr>
+                    <td>{{ date_labels.get(d.dateType, d.dateType) }}</td>
+                    <td>{{ d.date.split("T")[0] if d.date else "—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {# Nyckelord #}
+    {% set keywords = sql("SELECT k.keyword FROM keyword k JOIN aggregationkeyword ak ON k.id = ak.keyword_id WHERE ak.aggregation_id = :id", {"id": row.objectId}) %}
+    {% if keywords|length > 0 %}
+    <div class="detail-card">
+        <h2>Nyckelord</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            {% for kw in keywords %}
+            <span style="background: var(--background); border: 1px solid var(--border-color); padding: 0.2rem 0.7rem; border-radius: 1rem; font-size: 0.9rem;">{{ kw.keyword }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Sekretessmarkeringar #}
+    {% if restrictions|length > 0 %}
+    <div class="detail-card">
+        <h2>Sekretessmarkeringar</h2>
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th>Typ</th>
+                    <th>Lagrum</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in restrictions %}
+                <tr>
+                    <td>{{ r.restrictionType }}</td>
+                    <td>{{ r.regulation or "—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {# Handlingar #}
+    <div class="detail-card">
+        <h2>Handlingar</h2>
+        {% if is_confidential and not has_confidentiality %}
+        <p style="color: var(--text-secondary); font-style: italic;">Handlingar för detta ärende är skyddade.</p>
+        {% else %}
+        {% set records = sql("SELECT r.objectId, r.title, r.direction, r.recordType, r.sender, r.receiver, r.confidential, (SELECT COUNT(*) FROM recordrestriction rr WHERE rr.record_id = r.objectId) AS has_restriction FROM record r WHERE r.Aggregation_id = :id ORDER BY r.runningNumber, r.objectId", {"id": row.objectId}) %}
+        {% if records|length > 0 %}
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th>Dnr</th>
+                    <th>Titel</th>
+                    <th>Riktning</th>
+                    <th>Avsändare</th>
+                    <th>Mottagare</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set direction_labels = {"outgoing": "Utgående", "incoming": "Inkommande", "internal": "Intern"} %}
+                {% for rec in records %}
+                {% set rec_confidential = rec.confidential == 1 or rec.has_restriction > 0 %}
+                <tr>
+                    <td><a href="{{ urls.row(database, 'record', rec.objectId) }}">{{ rec.objectId }}</a></td>
+                    {% if rec_confidential and not has_confidentiality %}
+                    <td><span class="confidential-badge">Skyddad handling</span></td>
+                    <td>—</td>
+                    <td><em>Skyddad</em></td>
+                    <td><em>Skyddad</em></td>
+                    {% else %}
+                    <td>{{ rec.title or "—" }}</td>
+                    <td>{{ direction_labels.get(rec.direction, rec.direction or "—") }}</td>
+                    <td>{{ rec.sender or "—" }}</td>
+                    <td>{{ rec.receiver or "—" }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: var(--text-secondary); font-style: italic;">Inga handlingar registrerade.</p>
+        {% endif %}
+        {% endif %}
+    </div>
+
+    {# Bilagor på ärendenivå #}
+    {% if not is_confidential or has_confidentiality %}
+    {% set appendices = sql("SELECT id, name, description, fileFormat, path, variant FROM appendix WHERE aggregation_id = :id", {"id": row.objectId}) %}
+    {% if appendices|length > 0 %}
+    <div class="detail-card">
+        <h2>Bilagor <span class="count-badge">{{ appendices|length }}</span></h2>
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th>Namn</th>
+                    <th>Format</th>
+                    <th>Variant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set variant_labels = {"production": "Produktion", "preservation": "Bevarande"} %}
+                {% for app in appendices %}
+                <tr>
+                    <td>
+                        {% if app.path %}
+                        <a href="{{ app.path }}{{ app.id }}">{{ app.description or app.name }}</a>
+                        {% else %}
+                        {{ app.description or app.name }}
+                        {% endif %}
+                    </td>
+                    <td>{{ app.fileFormat or "—" }}</td>
+                    <td>{{ variant_labels.get(app.variant, app.variant or "—") }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+{% endblock %}

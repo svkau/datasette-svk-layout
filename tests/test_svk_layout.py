@@ -161,3 +161,87 @@ def test_view_database_no_restriction_without_allow(mock_db_config):
             resource="some_database"
         )
     assert result is None
+
+
+# -- Public_360 permission tests --
+
+MOCK_P360_CONFIG = {
+    "tables": {
+        "aggregation": {
+            "allow": {
+                "permissions": [
+                    "access.search_casefiles",
+                    "access.search_casefiles_confidentiality",
+                    "access.search_everything"
+                ]
+            },
+            "title": "Ärenden"
+        },
+        "record": {
+            "allow": {
+                "permissions": [
+                    "access.search_casefiles",
+                    "access.search_casefiles_confidentiality",
+                    "access.search_everything"
+                ]
+            },
+            "title": "Handlingar"
+        }
+    }
+}
+
+
+@pytest.fixture
+def mock_p360_config():
+    with patch("datasette_svk_layout.get_database_config", return_value=MOCK_P360_CONFIG):
+        yield
+
+
+def test_p360_denied_without_casefiles_role(mock_p360_config):
+    """Public_360-tabell ska neka aktör utan ärendebehörighet."""
+    actor = {"permissions": ["access.search_salaries"]}
+    result = permission_allowed(
+        datasette=None, actor=actor, action="view-table",
+        resource=("Public_360_2520026135", "aggregation")
+    )
+    assert result is False
+
+
+def test_p360_granted_casefiles_role(mock_p360_config):
+    """Public_360-tabell ska tillåta aktör med search_casefiles."""
+    actor = {"permissions": ["access.search_casefiles"]}
+    result = permission_allowed(
+        datasette=None, actor=actor, action="view-table",
+        resource=("Public_360_2520026135", "aggregation")
+    )
+    assert result is True
+
+
+def test_p360_granted_confidentiality_role(mock_p360_config):
+    """Public_360-tabell ska tillåta aktör med search_casefiles_confidentiality."""
+    actor = {"permissions": ["access.search_casefiles_confidentiality"]}
+    result = permission_allowed(
+        datasette=None, actor=actor, action="view-table",
+        resource=("Public_360_2520026135", "aggregation")
+    )
+    assert result is True
+
+
+def test_p360_view_database_denied_wrong_role(mock_p360_config):
+    """Public_360-databas ska döljas utan ärendebehörighet."""
+    actor = {"permissions": ["access.search_salaries"]}
+    result = permission_allowed(
+        datasette=None, actor=actor, action="view-database",
+        resource="Public_360_2520026135"
+    )
+    assert result is False
+
+
+def test_p360_view_database_allowed(mock_p360_config):
+    """Public_360-databas ska visas med search_casefiles."""
+    actor = {"permissions": ["access.search_casefiles"]}
+    result = permission_allowed(
+        datasette=None, actor=actor, action="view-database",
+        resource="Public_360_2520026135"
+    )
+    assert result is None
