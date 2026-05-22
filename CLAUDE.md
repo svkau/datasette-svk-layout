@@ -153,6 +153,20 @@ Routes under `/-/admin/` (kräver admin-behörighet):
 - `/-/admin/databases/{name}` - Redigera metadata och behörigheter
 - `/-/admin/databases/{name}/delete` - Ta bort databaspost
 - `/-/admin/import` - Importera från metadata.json (förhandsgranskning + import)
+- `/-/admin/site` - Redigera startsidans "Om tjänsten"-text och snabblänkar
+- `/-/admin/news` - Lista, skapa, redigera och ta bort nyheter
+- `/-/admin/news/new` - Skapa ny nyhet
+- `/-/admin/news/{id}` - Redigera nyhet
+- `/-/admin/news/{id}/delete` - Ta bort nyhet
+
+### Dynamiskt startsideinnehåll
+
+Startsidans "Om tjänsten"-text, snabblänkar och nyhetsflöde lagras i `svk_metadata.db`:
+- `site_content` — nyckel-värde (t.ex. `about_title`, `about_html`)
+- `site_links` — snabblänkar med titel, URL och sorteringsordning
+- `site_news` — nyheter med titel, HTML-body, författarnamn och datum
+
+Data injiceras som `site_about`, `site_links`, `site_news` via `extra_template_vars()`. Fallback till hårdkodade standardvärden om databasen är tom.
 
 **Migrering från metadata.json:**
 ```bash

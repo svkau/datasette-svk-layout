@@ -159,6 +159,21 @@ Webbaserat gränssnitt under `/-/admin/` (kräver `access.search_admin`):
 | `/-/admin/databases/{name}` | Redigera metadata och behörigheter |
 | `/-/admin/databases/{name}/delete` | Ta bort databaspost |
 | `/-/admin/import` | Importera från metadata.json |
+| `/-/admin/site` | Redigera "Om tjänsten"-text och snabblänkar |
+| `/-/admin/news` | Lista nyheter |
+| `/-/admin/news/new` | Skapa ny nyhet |
+| `/-/admin/news/{id}` | Redigera nyhet |
+| `/-/admin/news/{id}/delete` | Ta bort nyhet |
+
+### Dynamiskt startsideinnehåll
+
+Startsidans "Om tjänsten"-text, snabblänkar och nyhetsflöde är redigerbara via admin-UI. Data lagras i `svk_metadata.db`:
+
+- **`site_content`** — nyckel-värde för fritext (t.ex. `about_title`, `about_html` med HTML-stöd)
+- **`site_links`** — snabblänkar med titel, URL och sorteringsordning
+- **`site_news`** — nyheter med titel, HTML-body, författarnamn (från actor) och datum
+
+Om inget innehåll finns i databasen visas hårdkodade standardvärden.
 
 ### Migrering från metadata.json
 
