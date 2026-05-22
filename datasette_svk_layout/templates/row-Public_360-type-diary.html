@@ -1,0 +1,196 @@
+{% extends "row.html" %}
+
+{% block title %}Diarium: {{ display_rows[0].name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.detail-card h2 {
+    margin: 0 0 1rem 0;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.search-form {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.search-form input[type="text"] {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.search-form button {
+    padding: 0.75rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-form button:hover { background: var(--primary-dark); }
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+.results-table thead th {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.35rem 0.6rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.results-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.results-table tbody tr:hover { background: var(--background); }
+
+.results-table tbody td { padding: 0.3rem 0.6rem; }
+
+.results-table a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.results-table a:hover { text-decoration: underline; }
+
+.confidential-badge {
+    display: inline-block;
+    background: #f0ad4e;
+    color: #fff;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.results-count {
+    margin: 1rem 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% set row = display_rows[0] %}
+{% set has_confidentiality = actor and "access.search_casefiles_confidentiality" in (actor.permissions or []) %}
+{% set search_text = request.args.get('text', '') %}
+
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+
+    <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+        <a href="{{ urls.database(database) }}">Startsida</a> /
+        <span>{{ row.name }}</span>
+    </nav>
+
+    <div class="detail-card">
+        <h1 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.8rem;">
+            {{ row.name }}
+        </h1>
+        <p style="color: var(--text-secondary); margin: 0; font-size: 1rem;">
+            Arkivbildare: {{ row.archivist_organization or "—" }}
+        </p>
+    </div>
+
+    <div class="detail-card">
+        <h2>Sök ärenden i diariet</h2>
+        <form class="search-form" action="{{ request.path }}" method="get">
+            <input type="text" name="text" value="{{ search_text }}" placeholder="Fritextsökning..." autofocus>
+            <button type="submit">Sök</button>
+        </form>
+    </div>
+
+    {# Hämta ärenden #}
+    {% if search_text %}
+    {% set cases = sql("SELECT a.objectId, a.title, a.classificationCode, a.classificationText, a.status, a.opened, a.closed, a.responsible, a.counterpart, a.confidential, (SELECT COUNT(*) FROM aggregationrestriction ar WHERE ar.aggregation_id = a.objectId) AS has_restriction FROM aggregation a JOIN aggregation_fts ON aggregation_fts.objectId = a.objectId WHERE a.diary = :diary AND aggregation_fts MATCH '\"' || replace(trim(:text), ' ', '\" \"') || '\"*' ORDER BY a.opened DESC LIMIT 200", {"diary": row.name, "text": search_text}) %}
+    {% else %}
+    {% set cases = sql("SELECT a.objectId, a.title, a.classificationCode, a.classificationText, a.status, a.opened, a.closed, a.responsible, a.counterpart, a.confidential, (SELECT COUNT(*) FROM aggregationrestriction ar WHERE ar.aggregation_id = a.objectId) AS has_restriction FROM aggregation a WHERE a.diary = :diary ORDER BY a.opened DESC LIMIT 500", {"diary": row.name}) %}
+    {% endif %}
+
+    <div class="results-count">
+        {% if search_text %}
+        <strong>{{ cases|length }}</strong> träff{% if cases|length != 1 %}ar{% endif %} för "{{ search_text }}"
+        {% else %}
+        <strong>{{ cases|length }}</strong> ärende{% if cases|length != 1 %}n{% endif %} i diariet
+        {% endif %}
+    </div>
+
+    {% if cases|length > 0 %}
+    <div class="detail-card" style="padding: 0; overflow: hidden;">
+        <div style="overflow-x: auto;">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Dnr</th>
+                    <th>Titel</th>
+                    <th>Klassificering</th>
+                    <th>Öppnat</th>
+                    <th>Avslutat</th>
+                    <th>Handläggare</th>
+                    <th>Motpart</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cases %}
+                {% set is_confidential = c.confidential == 1 or c.has_restriction > 0 %}
+                <tr>
+                    <td><a href="{{ urls.row(database, 'aggregation', c.objectId) }}">{{ c.objectId }}</a></td>
+                    {% if is_confidential and not has_confidentiality %}
+                    <td><span class="confidential-badge">Skyddat ärende</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    {% else %}
+                    <td>{{ c.title or "—" }}</td>
+                    <td>{{ c.classificationCode }} {{ c.classificationText or "" }}</td>
+                    <td>{{ c.opened.split("T")[0] if c.opened else "—" }}</td>
+                    <td>{{ c.closed.split("T")[0] if c.closed else "—" }}</td>
+                    <td>{{ c.responsible or "—" }}</td>
+                    <td>{{ c.counterpart or "—" }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% if search_text and cases|length >= 200 %}
+    <p style="color: var(--text-secondary); margin-top: 1rem; font-style: italic;">Visar de 200 första träffarna. Förfina sökningen för att se fler resultat.</p>
+    {% elif not search_text and cases|length >= 500 %}
+    <p style="color: var(--text-secondary); margin-top: 1rem; font-style: italic;">Visar de 500 första ärendena. Använd sökfunktionen för att hitta specifika ärenden.</p>
+    {% endif %}
+    {% elif search_text %}
+    <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Inga ärenden hittades för "{{ search_text }}"</p>
+    {% else %}
+    <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Inga ärenden i diariet.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

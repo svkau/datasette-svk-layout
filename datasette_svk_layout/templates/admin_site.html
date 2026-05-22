@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Sidinnehåll - Administration{% endblock %}
+
+{% block body_class %}admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Sidinnehåll</h1>
+    <div>
+        <a href="/-/admin/databases" class="btn btn-secondary">Databaser</a>
+        <a href="/-/admin/news" class="btn btn-secondary">Nyheter</a>
+    </div>
+</div>
+
+{% if saved %}
+<div class="message-info">Ändringarna har sparats.</div>
+{% endif %}
+
+<form method="post" action="/-/admin/site">
+    <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
+
+    <fieldset>
+        <legend>Om tjänsten</legend>
+        <p class="form-help">Texten visas på startsidan. HTML med inline-styles stöds.</p>
+
+        <div class="form-group">
+            <label for="about_title">Rubrik</label>
+            <input type="text" id="about_title" name="about_title" value="{{ about_title }}" class="form-control" placeholder="Om tjänsten">
+        </div>
+
+        <div class="form-group">
+            <label for="about_html">Innehåll (HTML)</label>
+            <textarea id="about_html" name="about_html" rows="10" class="form-control" style="font-family: monospace;">{{ about_html }}</textarea>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Snabblänkar</legend>
+        <p class="form-help">Länkar visas på startsidan. Tomma rader ignoreras.</p>
+
+        <div id="links-container">
+            {% for link in links %}
+            <div class="form-group link-row" style="display: flex; gap: 0.5rem; align-items: end; margin-bottom: 0.5rem;">
+                <div style="flex: 1;">
+                    {% if loop.first %}<label>Titel</label>{% endif %}
+                    <input type="text" name="link_title_{{ loop.index0 }}" value="{{ link.title }}" class="form-control" placeholder="Titel">
+                </div>
+                <div style="flex: 2;">
+                    {% if loop.first %}<label>URL</label>{% endif %}
+                    <input type="text" name="link_url_{{ loop.index0 }}" value="{{ link.url }}" class="form-control" placeholder="https://...">
+                </div>
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-bottom: 2px;">Ta bort</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" class="btn btn-secondary" onclick="addLink()" style="margin-top: 0.5rem;">Lägg till länk</button>
+    </fieldset>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Spara</button>
+    </div>
+</form>
+
+<script>
+var linkIndex = {{ links|length }};
+function addLink() {
+    var container = document.getElementById('links-container');
+    var div = document.createElement('div');
+    div.className = 'form-group link-row';
+    div.style.cssText = 'display: flex; gap: 0.5rem; align-items: end; margin-bottom: 0.5rem;';
+    div.innerHTML = '<div style="flex: 1;"><input type="text" name="link_title_' + linkIndex + '" class="form-control" placeholder="Titel"></div>' +
+        '<div style="flex: 2;"><input type="text" name="link_url_' + linkIndex + '" class="form-control" placeholder="https://..."></div>' +
+        '<button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-bottom: 2px;">Ta bort</button>';
+    container.appendChild(div);
+    linkIndex++;
+}
+</script>
+{% endblock %}

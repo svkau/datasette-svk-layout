@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}{{ get_formatted_database_title(database) or "Ärendehandlingar" }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.search-header {
+    background: var(--surface);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.search-header h1 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+}
+
+.search-form {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.search-form input[type="text"] {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.search-form button {
+    padding: 0.75rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-form button:hover {
+    background: var(--primary-dark);
+}
+
+.search-section {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.search-section h2 {
+    margin: 0 0 0.5rem 0;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.search-section p {
+    color: var(--text-secondary);
+    margin: 0 0 1rem 0;
+    font-size: 0.95rem;
+}
+
+.diary-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.diary-list li a {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 0.4rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+}
+
+.diary-list li a:hover {
+    background: var(--border-color);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+
+    <div class="search-header">
+        <h1>{{ get_formatted_database_title(database) or "Ärendehandlingar" }}</h1>
+    </div>
+
+    <div class="search-section">
+        <h2>Sök ärenden</h2>
+        <p>Fritextsökning på ärendenummer, titel, klassificering, handläggare, motpart</p>
+        <form class="search-form" action="{{ urls.query(database, 'SokArenden') }}" method="get">
+            <input type="text" name="text" placeholder="Ange söktext..." autofocus>
+            <button type="submit">Sök</button>
+        </form>
+    </div>
+
+    <div class="search-section">
+        <h2>Diarier</h2>
+        <p>Välj ett diarium för att bläddra och söka bland dess ärenden</p>
+        {% set diaries = sql("SELECT id, name FROM diary ORDER BY name") %}
+        {% if diaries|length > 0 %}
+        <ul class="diary-list">
+            {% for d in diaries %}
+            <li><a href="{{ urls.row(database, 'diary', d.id) }}">{{ d.name }}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-secondary); font-style: italic;">Inga diarier hittades.</p>
+        {% endif %}
+    </div>
+
+    <div class="search-section">
+        <h2>Sök handlingar</h2>
+        <p>Fritextsökning på handlingsnummer, titel, avsändare, mottagare</p>
+        <form class="search-form" action="{{ urls.query(database, 'SokHandlingar') }}" method="get">
+            <input type="text" name="text" placeholder="Ange söktext...">
+            <button type="submit">Sök</button>
+        </form>
+    </div>
+
+    {% if actor and "access.search_everything" in (actor.permissions or []) %}
+    {% set db_config = get_database_type_config(database) %}
+    {% if db_config and db_config.tables %}
+    <div style="margin-top: 1rem; padding: 1.5rem 2rem; background: var(--surface); border: 1px solid var(--border-color); border-radius: 0.75rem;">
+        <h2 style="margin: 0 0 0.5rem 0; color: var(--primary-color); font-size: 1.2rem;">Alla tabeller</h2>
+        <p style="color: var(--text-secondary); margin: 0 0 1rem 0; font-size: 0.95rem;">Direkt åtkomst till databasens underliggande tabeller</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            {% for table_name, table_config in db_config.tables.items() %}
+            {% if not table_config.hidden %}
+            <a href="{{ urls.table(database, table_name) }}"
+               style="display: inline-block; padding: 0.3rem 0.8rem; background: var(--background); border: 1px solid var(--border-color); border-radius: 0.4rem; color: var(--primary-color); text-decoration: none; font-size: 0.9rem;">
+                {{ table_config.title or table_name }}
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+{% endblock %}

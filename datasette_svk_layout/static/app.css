@@ -2272,6 +2272,48 @@ dl.column-descriptions dd:last-child {
     }
 }
 
+/* Site News */
+.site-news {
+    margin: 0 0 3rem 0;
+}
+
+.site-news h2 {
+    color: var(--svk-wine-red);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.news-item {
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    background: var(--svk-background);
+    border-left: 4px solid var(--svk-wine-red);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px var(--svk-shadow);
+}
+
+.news-item h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+    color: var(--svk-text-dark);
+}
+
+.news-meta {
+    font-size: 0.85rem;
+    color: var(--svk-text-light);
+    margin-bottom: 0.5rem;
+}
+
+.news-body {
+    color: var(--svk-text-dark);
+    line-height: 1.6;
+}
+
+.news-body p:last-child {
+    margin-bottom: 0;
+}
+
 /* Database and Table Description Styling */
 .database-description,
 .table-description,

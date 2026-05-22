@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Nyheter - Administration{% endblock %}
+
+{% block body_class %}admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Nyheter</h1>
+    <div>
+        <a href="/-/admin/site" class="btn btn-secondary">Sidinnehåll</a>
+        <a href="/-/admin/databases" class="btn btn-secondary">Databaser</a>
+    </div>
+</div>
+
+{% if deleted %}
+<div class="message-info">Nyheten har tagits bort.</div>
+{% endif %}
+
+<div class="admin-actions" style="margin-bottom: 1rem;">
+    <a href="/-/admin/news/new" class="btn btn-primary">Ny nyhet</a>
+</div>
+
+{% if news %}
+<table class="rows-and-columns">
+    <thead>
+        <tr>
+            <th>Titel</th>
+            <th>Författare</th>
+            <th>Skapad</th>
+            <th>Uppdaterad</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in news %}
+        <tr>
+            <td><a href="/-/admin/news/{{ item.id }}">{{ item.title }}</a></td>
+            <td>{{ item.author }}</td>
+            <td>{{ item.created[:16] if item.created else "" }}</td>
+            <td>{{ item.updated[:16] if item.updated else "" }}</td>
+            <td><a href="/-/admin/news/{{ item.id }}">Redigera</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Inga nyheter finns ännu.</p>
+{% endif %}
+{% endblock %}

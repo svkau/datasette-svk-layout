@@ -56,18 +56,46 @@ Manages 500+ organizational databases. Database names follow pattern `{type}_{or
 | `datasette_svk_layout/metadata_db.py` | MetadataDB-klass: schema, CRUD, allow-dict assemblering, cache |
 | `datasette_svk_layout/admin_routes.py` | Admin-UI route handlers med behörighetskontroll |
 | `datasette_svk_layout/migrate_metadata.py` | Migreringsskript för import från metadata.json |
+| `datasette_svk_layout/create_record_fts.py` | Skapa FTS5-index för record-tabellen i Public_360-databaser |
 | `dev_plugins/dev_mock_actor.example.py` | Mock actor plugin for local development |
 
 ### Database Types
 
 | Type | Template prefix | Description |
 |------|----------------|-------------|
-| `Public_360` | — | Ärendehandlingar (20 tabeller + 7 dolda) |
+| `Public_360` | `database-Public_360-type`, `query-Public_360-type-*`, `row-Public_360-type-*` | Ärendehandlingar (ERMS) med ärendesök, handlingssök, diariesökning och sekretessfiltrering |
 | `aveny` | `database-aveny-type` | Ekonomihandlingar |
 | `lonehandlingar` | `database-lonehandlingar-type`, `query-lonehandlingar-type-*`, `row-lonehandlingar-type-*` | Lönehandlingar med personsök, periodsök, lönespecifikationer |
 | `hrm` | `database-hrm-type`, `query-hrm-type-*`, `row-hrm-type-*` | HR Personalsystem med personsök, reseräkningar, tidsredovisning och dokumentservering |
 
-HRM- och lonehandlingar-typerna har per-query och per-row template-mappningar i `database_types.json` under `templates.queries` och `templates.rows`.
+HRM-, lonehandlingar- och Public_360-typerna har per-query och per-row template-mappningar i `database_types.json` under `templates.queries` och `templates.rows`.
+
+### Public_360 Type (ERMS-baserad)
+
+Ärendehandlingar från ärendehanteringssystem baserat på Svenska kyrkans ERMS-anpassning. Framtida ERMS-typer från andra system kommer att ha liknande struktur.
+
+**Databasstruktur:**
+- `aggregation` (ärenden), `record` (handlingar), `appendix` (filer på disk via path), `agents`/`agenttypes`, `diary`, `restriction`, `dates`, `keyword`, `extraids`, `othertitles`
+- Kopplingstabeller: `aggregationagent`, `recordagent`, `aggregationkeyword`, `recordkeyword`, `aggregationrestriction`, `recordrestriction`
+- FTS5-index: `aggregation_fts` (inbyggd), `record_fts` (skapas via `create_record_fts.py`)
+- Agent-tabellens kolumner: `id`, `idNumber`, `name`, `type_id` (FK). Agenttypes: `id`, `type` (OBS: inte `agenttype`)
+
+**Sekretessmodell — två behörighetsroller:**
+- `access.search_casefiles` — kan söka men sekretessmarkerade uppgifter filtreras:
+  - Sekretessmarkerat ärende (`confidential=1` eller har `aggregationrestriction`): titel → "Skyddat ärende", agenter (sender/receiver/other/counterpart) → "Skyddad", alla handlingar döljs helt
+  - Sekretessmarkerad handling (under icke-sekretessärende): titel → "Skyddad handling", agenter maskerade, bilagor dolda
+- `access.search_casefiles_confidentiality` — full åtkomst till allt
+
+**Sökfunktioner (3 sökvägar på landningssidan):**
+- Fritextsök ärenden (canned query `SokArenden` → `aggregation_fts`)
+- Diarielista med per-diarium sökning (inline `sql()` i diary row-template)
+- Fritextsök handlingar (canned query `SokHandlingar` → `record_fts`)
+
+**FTS-sökmönster:** `'"' || replace(trim(:text), ' ', '" "') || '"*'` — citerar varje ord (skyddar bindestreck) + prefix-wildcard på sista termen.
+
+**LIMIT:** 200 för sökresultat, 500 för diarielista, med informationsmeddelande.
+
+**FTS-script:** `python -m datasette_svk_layout.create_record_fts <db_path>` skapar `record_fts` med triggers.
 
 ### Template Helper Functions (available in Jinja2)
 
@@ -125,6 +153,20 @@ Routes under `/-/admin/` (kräver admin-behörighet):
 - `/-/admin/databases/{name}` - Redigera metadata och behörigheter
 - `/-/admin/databases/{name}/delete` - Ta bort databaspost
 - `/-/admin/import` - Importera från metadata.json (förhandsgranskning + import)
+- `/-/admin/site` - Redigera startsidans "Om tjänsten"-text och snabblänkar
+- `/-/admin/news` - Lista, skapa, redigera och ta bort nyheter
+- `/-/admin/news/new` - Skapa ny nyhet
+- `/-/admin/news/{id}` - Redigera nyhet
+- `/-/admin/news/{id}/delete` - Ta bort nyhet
+
+### Dynamiskt startsideinnehåll
+
+Startsidans "Om tjänsten"-text, snabblänkar och nyhetsflöde lagras i `svk_metadata.db`:
+- `site_content` — nyckel-värde (t.ex. `about_title`, `about_html`)
+- `site_links` — snabblänkar med titel, URL och sorteringsordning
+- `site_news` — nyheter med titel, HTML-body, författarnamn och datum
+
+Data injiceras som `site_about`, `site_links`, `site_news` via `extra_template_vars()`. Fallback till hårdkodade standardvärden om databasen är tom.
 
 **Migrering från metadata.json:**
 ```bash
