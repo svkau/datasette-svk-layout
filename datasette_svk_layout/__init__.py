@@ -240,6 +240,23 @@ def extra_template_vars(datasette, database):
             return [dict(row) for row in result.rows]
         return []
 
+    def get_site_about():
+        mdb = _get_metadata_db()
+        if not mdb:
+            return {"title": "Om tjänsten", "html": ""}
+        return {
+            "title": mdb.get_site_content("about_title", "") or "Om tjänsten",
+            "html": mdb.get_site_content("about_html", ""),
+        }
+
+    def get_site_links():
+        mdb = _get_metadata_db()
+        return mdb.get_site_links() if mdb else []
+
+    def get_site_news():
+        mdb = _get_metadata_db()
+        return mdb.get_site_news(limit=5) if mdb else []
+
     return {
         "sql": sql,
         "get_unit_name": get_unit_name,
@@ -251,7 +268,10 @@ def extra_template_vars(datasette, database):
         "get_formatted_queries": get_formatted_queries,
         "get_column_label": get_column_label,
         "get_query_description": get_query_desc,
-        "get_database_type_config": get_database_config
+        "get_database_type_config": get_database_config,
+        "site_about": get_site_about(),
+        "site_links": get_site_links(),
+        "site_news": get_site_news(),
     }
 
 @hookimpl
@@ -547,6 +567,11 @@ def register_routes():
         admin_database_edit,
         admin_database_delete,
         admin_import,
+        admin_site,
+        admin_news_list,
+        admin_news_new,
+        admin_news_edit,
+        admin_news_delete,
     )
     return [
         (r"^/(?P<database>[^/]+)/dokument/(?P<doc_id>[^/]+)$", serve_document),
@@ -556,4 +581,9 @@ def register_routes():
         (r"^/-/admin/databases/(?P<database_name>[^/]+)/delete$", admin_database_delete),
         (r"^/-/admin/databases/(?P<database_name>[^/]+)$", admin_database_edit),
         (r"^/-/admin/import$", admin_import),
+        (r"^/-/admin/site$", admin_site),
+        (r"^/-/admin/news/new$", admin_news_new),
+        (r"^/-/admin/news/(?P<news_id>\d+)/delete$", admin_news_delete),
+        (r"^/-/admin/news/(?P<news_id>\d+)$", admin_news_edit),
+        (r"^/-/admin/news$", admin_news_list),
     ]

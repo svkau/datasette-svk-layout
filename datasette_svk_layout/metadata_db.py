@@ -39,6 +39,27 @@ class MetadataDB:
                 actor_value TEXT NOT NULL,
                 PRIMARY KEY (database_name, action, actor_key, actor_value)
             );
+
+            CREATE TABLE IF NOT EXISTS site_content (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS site_links (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                url TEXT NOT NULL,
+                sort_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS site_news (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                author TEXT NOT NULL,
+                created TEXT NOT NULL DEFAULT (datetime('now')),
+                updated TEXT
+            );
         """)
 
     def _invalidate_cache(self):
@@ -265,6 +286,74 @@ class MetadataDB:
                 imported_permissions += 1
 
         return {"imported_metadata": imported_metadata, "imported_permissions": imported_permissions}
+
+    # --- Site content ---
+
+    def get_site_content(self, key, default=None):
+        row = self._conn.execute(
+            "SELECT value FROM site_content WHERE key = ?", (key,)
+        ).fetchone()
+        return row["value"] if row else default
+
+    def set_site_content(self, key, value):
+        self._conn.execute(
+            "INSERT INTO site_content (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (key, value),
+        )
+        self._conn.commit()
+
+    # --- Site links ---
+
+    def get_site_links(self):
+        rows = self._conn.execute(
+            "SELECT id, title, url, sort_order FROM site_links ORDER BY sort_order, id"
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def set_site_links(self, links):
+        """Replace all links. links = [{"title": ..., "url": ..., "sort_order": ...}, ...]"""
+        self._conn.execute("DELETE FROM site_links")
+        for i, link in enumerate(links):
+            self._conn.execute(
+                "INSERT INTO site_links (title, url, sort_order) VALUES (?, ?, ?)",
+                (link["title"], link["url"], link.get("sort_order", i)),
+            )
+        self._conn.commit()
+
+    # --- Site news ---
+
+    def get_site_news(self, limit=10):
+        rows = self._conn.execute(
+            "SELECT id, title, body, author, created, updated FROM site_news ORDER BY created DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def get_news_item(self, news_id):
+        row = self._conn.execute(
+            "SELECT id, title, body, author, created, updated FROM site_news WHERE id = ?",
+            (news_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def add_news(self, title, body, author):
+        cursor = self._conn.execute(
+            "INSERT INTO site_news (title, body, author) VALUES (?, ?, ?)",
+            (title, body, author),
+        )
+        self._conn.commit()
+        return cursor.lastrowid
+
+    def update_news(self, news_id, title, body, author):
+        self._conn.execute(
+            "UPDATE site_news SET title = ?, body = ?, author = ?, updated = datetime('now') WHERE id = ?",
+            (title, body, author, news_id),
+        )
+        self._conn.commit()
+
+    def delete_news(self, news_id):
+        self._conn.execute("DELETE FROM site_news WHERE id = ?", (news_id,))
+        self._conn.commit()
 
     def close(self):
         self._conn.close()

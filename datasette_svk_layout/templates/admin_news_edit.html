@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_new %}Ny nyhet{% else %}Redigera nyhet{% endif %} - Administration{% endblock %}
+
+{% block body_class %}admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if is_new %}Ny nyhet{% else %}Redigera nyhet{% endif %}</h1>
+    <div>
+        <a href="/-/admin/news" class="btn btn-secondary">Tillbaka till nyheter</a>
+    </div>
+</div>
+
+{% if saved %}
+<div class="message-info">Nyheten har sparats.</div>
+{% endif %}
+
+<form method="post" action="{% if is_new %}/-/admin/news/new{% else %}/-/admin/news/{{ news.id }}{% endif %}">
+    <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
+
+    <div class="form-group">
+        <label for="title">Titel</label>
+        <input type="text" id="title" name="title" value="{{ news.title if news else '' }}" class="form-control" required>
+    </div>
+
+    <div class="form-group">
+        <label for="body">Innehåll (HTML)</label>
+        <textarea id="body" name="body" rows="10" class="form-control" style="font-family: monospace;" required>{{ news.body if news else '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Författare</label>
+        <input type="text" value="{{ author_name }}" class="form-control" disabled>
+        <p class="form-help">Sätts automatiskt från din inloggning vid sparning.</p>
+    </div>
+
+    {% if news %}
+    <div class="form-group">
+        <label>Skapad</label>
+        <input type="text" value="{{ news.created }}" class="form-control" disabled>
+    </div>
+    {% if news.updated %}
+    <div class="form-group">
+        <label>Senast uppdaterad</label>
+        <input type="text" value="{{ news.updated }}" class="form-control" disabled>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Spara</button>
+        <a href="/-/admin/news" class="btn btn-secondary">Avbryt</a>
+    </div>
+</form>
+
+{% if news %}
+<hr style="margin: 2rem 0;">
+<form method="post" action="/-/admin/news/{{ news.id }}/delete" onsubmit="return confirm('Vill du verkligen ta bort denna nyhet?')">
+    <input type="hidden" name="csrftoken" value="{{ csrftoken() }}">
+    <button type="submit" class="btn btn-danger">Ta bort nyhet</button>
+</form>
+{% endif %}
+{% endblock %}

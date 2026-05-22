@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from datasette.utils.asgi import Response, Forbidden
 
 
@@ -159,3 +160,140 @@ async def admin_import(scope, receive, datasette, request):
         "error": error,
         "db_count": db_count if request.method == "GET" else None,
     })
+
+
+def _get_actor_name(request):
+    actor = request.actor if hasattr(request, 'actor') else None
+    if not actor:
+        return "Okänd"
+    first = actor.get("first_name", "")
+    last = actor.get("last_name", "")
+    return f"{first} {last}".strip() or actor.get("username", "Okänd")
+
+
+async def admin_site(scope, receive, datasette, request):
+    """Edit site content (about text) and quick links."""
+    if not await _check_admin(datasette, request):
+        raise Forbidden("Administratorsbehörighet krävs")
+
+    mdb = _get_metadata_db()
+
+    if request.method == "POST":
+        post_vars = await request.post_vars()
+
+        # Save about content
+        mdb.set_site_content("about_title", post_vars.get("about_title", "").strip())
+        mdb.set_site_content("about_html", post_vars.get("about_html", "").strip())
+
+        # Save links
+        links = []
+        i = 0
+        while True:
+            title = post_vars.get(f"link_title_{i}", "").strip()
+            url = post_vars.get(f"link_url_{i}", "").strip()
+            if not title and not url:
+                break
+            if title and url:
+                links.append({"title": title, "url": url, "sort_order": i})
+            i += 1
+        mdb.set_site_links(links)
+
+        return Response.redirect("/-/admin/site?saved=1")
+
+    # GET
+    about_title = mdb.get_site_content("about_title", "")
+    about_html = mdb.get_site_content("about_html", "")
+    links = mdb.get_site_links()
+    saved = request.args.get("saved", "")
+
+    return await _render(datasette, request, "admin_site.html", {
+        "about_title": about_title,
+        "about_html": about_html,
+        "links": links,
+        "saved": saved,
+    })
+
+
+async def admin_news_list(scope, receive, datasette, request):
+    """List all news items."""
+    if not await _check_admin(datasette, request):
+        raise Forbidden("Administratorsbehörighet krävs")
+
+    mdb = _get_metadata_db()
+    news = mdb.get_site_news(limit=100)
+    deleted = request.args.get("deleted", "")
+
+    return await _render(datasette, request, "admin_news_list.html", {
+        "news": news,
+        "deleted": deleted,
+    })
+
+
+async def admin_news_new(scope, receive, datasette, request):
+    """Create a new news item."""
+    if not await _check_admin(datasette, request):
+        raise Forbidden("Administratorsbehörighet krävs")
+
+    mdb = _get_metadata_db()
+
+    if request.method == "POST":
+        post_vars = await request.post_vars()
+        title = post_vars.get("title", "").strip()
+        body = post_vars.get("body", "").strip()
+        author = _get_actor_name(request)
+
+        if title and body:
+            news_id = mdb.add_news(title, body, author)
+            return Response.redirect(f"/-/admin/news/{news_id}?saved=1")
+
+    return await _render(datasette, request, "admin_news_edit.html", {
+        "news": None,
+        "is_new": True,
+        "author_name": _get_actor_name(request),
+    })
+
+
+async def admin_news_edit(scope, receive, datasette, request):
+    """Edit an existing news item."""
+    if not await _check_admin(datasette, request):
+        raise Forbidden("Administratorsbehörighet krävs")
+
+    mdb = _get_metadata_db()
+    news_id = int(request.url_vars["news_id"])
+
+    if request.method == "POST":
+        post_vars = await request.post_vars()
+        title = post_vars.get("title", "").strip()
+        body = post_vars.get("body", "").strip()
+        author = _get_actor_name(request)
+
+        if title and body:
+            mdb.update_news(news_id, title, body, author)
+            return Response.redirect(f"/-/admin/news/{news_id}?saved=1")
+
+    news = mdb.get_news_item(news_id)
+    if not news:
+        return Response.text("Nyhet hittades inte", status=404)
+
+    saved = request.args.get("saved", "")
+
+    return await _render(datasette, request, "admin_news_edit.html", {
+        "news": news,
+        "is_new": False,
+        "saved": saved,
+        "author_name": _get_actor_name(request),
+    })
+
+
+async def admin_news_delete(scope, receive, datasette, request):
+    """Delete a news item."""
+    if not await _check_admin(datasette, request):
+        raise Forbidden("Administratorsbehörighet krävs")
+
+    if request.method != "POST":
+        return Response.text("Method not allowed", status=405)
+
+    mdb = _get_metadata_db()
+    news_id = int(request.url_vars["news_id"])
+    mdb.delete_news(news_id)
+    return Response.redirect("/-/admin/news?deleted=1")

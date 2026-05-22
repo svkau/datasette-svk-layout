@@ -10,7 +10,10 @@
 {% block description_source_license %}
 <div class="site-info-container">
     <div class="site-info-text">
-        <h2>Om tjänsten</h2>
+        <h2>{{ site_about.title if site_about and site_about.title else "Om tjänsten" }}</h2>
+        {% if site_about and site_about.html %}
+        {{ site_about.html|safe }}
+        {% else %}
         <p>
             Här kan du söka och utforska data från Svenska kyrkans gemensamma e-arkiv.
             Informationen är organiserad i databaser som innehåller strukturerad data
@@ -20,19 +23,39 @@
             Använd sök- och filtreringsfunktionerna för att hitta den information du behöver.
             Varje databas innehåller tabeller med detaljerad data som kan exporteras i olika format.
         </p>
+        {% endif %}
     </div>
 
     <div class="site-info-links">
         <h2>Snabblänkar</h2>
         <ul>
+            {% if site_links %}
+            {% for link in site_links %}
+            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+            {% endfor %}
+            {% else %}
             <li><a href="https://www.svenskakyrkan.se">Svenska kyrkan</a></li>
             <li><a href="#">Användarguide</a></li>
             <li><a href="#">Om e-arkivet</a></li>
             <li><a href="#">Kontakta support</a></li>
+            {% endif %}
         </ul>
     </div>
 </div>
 {% endblock %}
+
+{% if site_news %}
+<div class="site-news">
+    <h2>Nyheter</h2>
+    {% for news in site_news %}
+    <div class="news-item">
+        <h3>{{ news.title }}</h3>
+        <div class="news-meta">{{ news.created[:10] }} — {{ news.author }}</div>
+        <div class="news-body">{{ news.body|safe }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 <div class="database-grid">
 {% for database in databases %}
