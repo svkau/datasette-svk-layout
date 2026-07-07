@@ -274,6 +274,106 @@ def extra_template_vars(datasette, database):
         "site_news": get_site_news(),
     }
 
+_TABLE_ACTIONS = [
+    "view-table", "insert-row", "update-row", "delete-row",
+    "drop-table", "create-table", "alter-table",
+]
+
+
+def _type_required_permissions(database_name):
+    """Return the union of role-permissions required by any table of a database's type.
+
+    An actor must hold at least one of these to see the database at all.
+    Empty set means the database type imposes no table-level role restriction.
+    """
+    db_config = get_database_config(database_name)
+    required = set()
+    for table_config in db_config.get("tables", {}).values():
+        required.update(table_config.get("allow", {}).get("permissions", []))
+    return required
+
+
+@hookimpl
+def permission_resources_sql(datasette, actor, action):
+    """Datasette 1.0 permission enforcement.
+
+    In Datasette 1.0 the ``permission_allowed`` hook was removed and ``allow``
+    blocks delivered via ``get_metadata`` are no longer consulted for permission
+    checks (they moved to ``config``). Enforcement therefore lives here for the
+    1.0 branch. The legacy ``permission_allowed`` hook below is kept for
+    Datasette 0.x — on each version the non-matching hook is silently ignored by
+    pluggy.
+
+    We emit DENY rows only. In the 1.0 permission model DENY beats ALLOW at the
+    same level and a resource-level rule (parent/child) beats the global default
+    ALLOW, so a per-database or per-table DENY overrides Datasette's default
+    "allow" without us having to re-grant the common case.
+
+    - view-database: actor's ``organizations_ids`` must match the database's
+      registered org(s) in ``svk_metadata.db``; databases whose type requires
+      table roles the actor entirely lacks are also hidden.
+    - table actions (view-table + mutations): actor must hold at least one of the
+      roles configured for the table in ``database_types.json``.
+    - execute-sql: actor must match the database's ``allow_sql`` roles.
+    """
+    if action != "view-database" and action != "execute-sql" and action not in _TABLE_ACTIONS:
+        return None
+
+    try:
+        from datasette.utils import actor_matches_allow
+        from datasette.default_permissions.helpers import PermissionRowCollector
+    except ImportError:
+        # Datasette < 1.0 — this hook does not exist there; permission_allowed
+        # (below) handles enforcement instead.
+        return None
+
+    actor_perms = set(actor.get("permissions", [])) if actor else set()
+    mdb = _get_metadata_db(datasette)
+    db_entries = mdb.get_all_metadata_as_datasette_dict().get("databases", {}) if mdb else {}
+    collector = PermissionRowCollector(prefix="svk")
+
+    # Organizations gating: any database whose registered organizations_ids do
+    # not match the actor is denied at the database (parent) level. A
+    # parent-level DENY also cascades to every table and to execute-sql on that
+    # database, so a wrong-enhet actor is blocked from the database page, its
+    # tables and its SQL alike.
+    org_denied = set()
+    for database_name in datasette.databases:
+        if database_name == "_internal":
+            continue
+        allow = db_entries.get(database_name, {}).get("allow")
+        if allow and not actor_matches_allow(actor, allow):
+            org_denied.add(database_name)
+
+    for database_name in datasette.databases:
+        if database_name == "_internal":
+            continue
+
+        if database_name in org_denied:
+            collector.add(database_name, None, False, "svk: fel enhet (organizations_ids)")
+            continue
+
+        if action == "view-database":
+            # Hide the database when its type requires table roles the actor lacks entirely.
+            required = _type_required_permissions(database_name)
+            if required and not actor_perms.intersection(required):
+                collector.add(database_name, None, False, "svk: saknar roll för databasens tabeller")
+
+        elif action in _TABLE_ACTIONS:
+            db_config = get_database_config(database_name)
+            for table_name, table_config in db_config.get("tables", {}).items():
+                required = table_config.get("allow", {}).get("permissions")
+                if required and not actor_perms.intersection(required):
+                    collector.add(database_name, table_name, False, "svk: saknar roll för tabell")
+
+        elif action == "execute-sql":
+            allow_sql = db_entries.get(database_name, {}).get("allow_sql")
+            if allow_sql and not actor_matches_allow(actor, allow_sql):
+                collector.add(database_name, None, False, "svk: saknar execute-sql roll")
+
+    return collector.to_permission_sql()
+
+
 @hookimpl
 def permission_allowed(datasette, actor, action, resource):
     """
@@ -283,6 +383,10 @@ def permission_allowed(datasette, actor, action, resource):
     - Database-level permissions (execute-sql, download) → metadata.json handles these
     - Table-level permissions (view-table, insert-row, etc.) → database_types.json handles these
     - This allows per-database unit_id in metadata.json + per-type roles in database_types.json
+
+    NOTE: This hook only fires under Datasette 0.x. Under Datasette 1.0 it is
+    silently ignored (the hookspec was removed); ``permission_resources_sql``
+    above handles enforcement there instead.
     """
 
     # Hide database from index if actor lacks all table-level permissions

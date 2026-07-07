@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ database }}: {{ table }}: {% if filtered_table_rows_count or filtered_table_rows_count == 0 %}{{ "{:,}".format(filtered_table_rows_count) }} row{% if filtered_table_rows_count == 1 %}{% else %}s{% endif %}{% endif %}{% if human_description_en %} {{ human_description_en }}{% endif %}{% endblock %}
+{% block title %}{{ database }}: {{ table }}: {% if count or count == 0 %}{{ "{:,}".format(count) }} row{% if count == 1 %}{% else %}s{% endif %}{% endif %}{% if human_description_en %} {{ human_description_en }}{% endif %}{% endblock %}
 
 {% block extra_head %}
 {{- super() -}}
@@ -22,7 +22,7 @@
 
 {% block content %}
 {% set table_info = get_formatted_table_info(database, table) %}
-<div class="page-header" style="border-color: #{{ database_color(database) }}">
+<div class="page-header" style="border-color: #{{ database_color }}">
     <h1>
         {% if table_info.title != table %}
             {{ table_info.title }}
@@ -33,7 +33,7 @@
         {% endif %}
         {% if is_view %} (vy){% endif %}{% if private %}<span class="locked"> 🔒</span>{% endif %}
     </h1>
-    {% set links = table_actions() %}{% if links %}
+    {% set links = actions() %}{% if links %}
     <details class="actions-menu-links">
         <summary><svg aria-labelledby="actions-menu-links-title" role="img"
                 style="color: #666" xmlns="http://www.w3.org/2000/svg"
@@ -76,8 +76,8 @@
 </dl>
 {% endif %}
 
-{% if filtered_table_rows_count or human_description_en %}
-    <h3>{% if filtered_table_rows_count or filtered_table_rows_count == 0 %}{{ "{:,}".format(filtered_table_rows_count) }} rad{% if filtered_table_rows_count == 1 %}{% else %}er{% endif %}{% endif %}
+{% if count or human_description_en %}
+    <h3>{% if count or count == 0 %}{{ "{:,}".format(count) }} rad{% if count == 1 %}{% else %}er{% endif %}{% endif %}
         {% if human_description_en %}{{ human_description_en }}{% endif %}
     </h3>
 {% endif %}
