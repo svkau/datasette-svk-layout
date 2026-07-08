@@ -5,6 +5,9 @@
 
 Datasette-plugin som ger Svenska kyrkans Datasette-instans ett anpassat tema, databas-typsystem, behörighetshantering och admin-gränssnitt.
 
+> **Datasette-kompatibilitet:** Denna version (0.4.x, branchen `main`) är avsedd för **Datasette 0.x**.
+> Använder du **Datasette 1.0** (1.0a35+), se branchen [`datasette-1.0`](https://github.com/svkau/datasette-svk-layout/tree/datasette-1.0) / version **0.5.x** (tagg `v0.5.0`). Spåren är separata eftersom 1.0 ändrade behörighets- och mall-API:erna.
+
 ## Funktioner
 
 - **Svenska kyrkan-tema** — Anpassad layout med SvK-branding, svenskt gränssnitt

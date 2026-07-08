@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+> **ℹ️ Versionsspår:** Denna branch (`main`, version 0.4.x) är för **Datasette 0.x**.
+> För **Datasette 1.0** (1.0a35+) finns ett separat spår på branchen `datasette-1.0`
+> (version 0.5.x, taggad `v0.5.0`) — där sker behörighetsprövning via
+> `permission_resources_sql` och mallarna är anpassade till 1.0:s kontext-API. De två
+> spåren är parallella och mergas inte ihop (1.0-koden bryter 0.x och tvärtom).
+
 ## Project Overview
 
 Datasette plugin (`datasette-svk-layout`) that provides a custom layout/theme for Svenska kyrkans Datasette instance. Swedish-localized UI with Svenska kyrkan branding.
