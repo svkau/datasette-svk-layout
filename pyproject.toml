@@ -1,6 +1,6 @@
 [project]
 name = "datasette-svk-layout"
-version = "0.4.0"
+version = "0.5.0"
 description = "Datasette-plugin med layout, databas-typsystem och admin-UI för Svenska kyrkan"
 readme = "README.md"
 authors = [{name = "Henrik Vitalis"}]
@@ -10,7 +10,7 @@ classifiers=[
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "datasette"
+    "datasette>=1.0a0"
 ]
 
 [build-system]
