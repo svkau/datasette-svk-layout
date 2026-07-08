@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+> **⚠️ Detta är `datasette-1.0`-branchen (version 0.5.x) — avsedd för Datasette 1.0 (1.0a35+).**
+> Datasette 0.x-spåret lever kvar på `main` (version 0.4.x) och är oförändrat. De två
+> branscherna är parallella och mergas INTE ihop — 1.0-koden bryter 0.x och tvärtom.
+> Se `## Datasette 1.0 vs 0.x` nedan för vad som skiljer. `dependencies` pinnar
+> `datasette>=1.0a0` på denna branch.
+
 ## Project Overview
 
 Datasette plugin (`datasette-svk-layout`) that provides a custom layout/theme for Svenska kyrkans Datasette instance. Swedish-localized UI with Svenska kyrkan branding.
@@ -24,15 +30,25 @@ datasette data/*.db --metadata data/metadata.json --plugins-dir dev_plugins/
 - **Entry point**: `svk_layout` in `pyproject.toml` -> `datasette_svk_layout` module
 - **Templates**: Jinja2 overrides in `datasette_svk_layout/templates/`
 - **Static assets**: CSS/JS in `datasette_svk_layout/static/`
-- **Plugin hooks** in `__init__.py`: `startup`, `get_metadata`, `canned_queries`, `extra_template_vars`, `permission_allowed`, `prepare_jinja2_environment`, `register_routes`
+- **Plugin hooks** in `__init__.py`: `startup`, `get_metadata`, `canned_queries`, `extra_template_vars`, `permission_resources_sql`, `permission_allowed`, `prepare_jinja2_environment`, `register_routes`
+  - `permission_resources_sql` — **behörighetsprövning under Datasette 1.0** (se `## Datasette 1.0 vs 0.x`).
+  - `permission_allowed` och `get_metadata` — kvar för Datasette 0.x men **no-ops på 1.0** (hookspecs borttagna; pluggy ignorerar tyst en hook utan matchande spec, så pluginet fungerar på båda versionerna).
 
 ### Configuration System
 
 Resolution priority (highest first):
 1. `data/metadata.json` - Specific overrides for individual databases/tables
-2. `datasette_svk_layout/data/svk_metadata.db` - SQLite-databas med databas-nivå metadata och behörigheter (injiceras via `get_metadata` hook)
+2. `datasette_svk_layout/data/svk_metadata.db` - SQLite-databas med databas-nivå metadata och behörigheter
 3. `datasette_svk_layout/data/database_types.json` - Shared config per database type
 4. Default Datasette templates
+
+> **1.0-avvikelse:** På Datasette 1.0 matar `get_metadata`-hooken INTE längre Datasette core
+> (hookspec borttagen). Titlar/beskrivningar från `svk_metadata.db` renderas därför via
+> mall-hjälparna (`get_formatted_database_title`/`-description`) som läser `MetadataDB` **direkt**.
+> Följd: prioritetsordningen ovan (metadata.json > SQLite) gäller INTE för renderade titlar på
+> 1.0 — mall-hjälpen kollar bara SQLite, aldrig metadata.json. Behörigheter (`allow`/`allow_sql`)
+> som förr injicerades via `get_metadata` prövas inte heller längre den vägen — se
+> `## Datasette 1.0 vs 0.x`.
 
 ### Database Type System
 
@@ -121,9 +137,14 @@ Dokument/bilaga auto-detects content type from magic bytes (PDF, images, Office 
 - `database_metadata` - title, description, source, license per databas
 - `database_permissions` - normaliserad tabell med (database_name, action, actor_key, actor_value)
 
-Behörighetsrader assembleras till Datasettes `allow`-dict:
-- `action = "view-database"` → `allow` i metadata
-- `action = "execute-sql"` → `allow_sql` i metadata
+Behörighetsrader lagras per `action`:
+- `action = "view-database"` → enhetsspärr (`organizations_ids`)
+- `action = "execute-sql"` → roller (`permissions`)
+
+På Datasette 1.0 läses dessa rader av `permission_resources_sql`-hooken och används för aktiv
+behörighetsprövning (se `## Datasette 1.0 vs 0.x`). De assembleras fortfarande till Datasettes
+`allow`/`allow_sql`-dict av `get_metadata`-hooken, men den vägen prövas inte längre på 1.0 (används
+bara av Datasette 0.x på `main`).
 
 **Konfiguration** (valfri, i metadata.json):
 ```json
@@ -173,10 +194,57 @@ Data injiceras som `site_about`, `site_links`, `site_news` via `extra_template_v
 python -m datasette_svk_layout.migrate_metadata [metadata_path] [db_path]
 ```
 
+## Datasette 1.0 vs 0.x
+
+Datasette 1.0 tog bort flera hooks/API:er som pluginet förlitade sig på under 0.x. Den här
+branchen (0.5.x) hanterar det; `main` (0.4.x) är kvar på 0.x-beteendet.
+
+### Behörighetsmodell — `permission_resources_sql`
+
+I 1.0 togs hooken `permission_allowed` bort och `allow`-block som levereras via `get_metadata`
+prövas inte längre (behörigheter flyttades från *metadata* till *config*). All enforcement sker
+därför via den nya hooken `permission_resources_sql(datasette, actor, action)`:
+
+- Hooken returnerar `PermissionSQL`-objekt vars SQL ger rader `(parent, child, allow, reason)`.
+  Bygg dem enkelt med `PermissionRowCollector` från `datasette.default_permissions.helpers`.
+- **Prejudens:** DENY slår ALLOW på samma nivå; child (tabell) slår parent (databas) slår global.
+  Datasettes default ger global ALLOW för view-*, så pluginet emitterar **bara DENY-rader** — en
+  parent-nivå DENY (`parent=db, child=NULL`) slår default-ALLOW och kaskaderar dessutom till alla
+  tabeller och execute-sql på samma databas.
+- **view-database:** DENY om aktörens `organizations_ids` inte matchar databasens registrerade enhet
+  i `svk_metadata.db` (matchas med `datasette.utils.actor_matches_allow`). DENY även om databasens
+  typ kräver tabellroller aktören helt saknar (döljer databasen ur indexet).
+- **Tabellåtgärder** (`view-table` + mutationer): DENY om aktören saknar samtliga roller i tabellens
+  `allow.permissions` i `database_types.json`.
+- **execute-sql:** DENY om aktören inte matchar databasens `execute-sql`-roller.
+
+De gamla `permission_allowed`-enhetstesterna (`tests/test_svk_layout.py`) testar en funktion som är
+en no-op på 1.0 men behålls (giltiga för 0.x). Den faktiska 1.0-spärren täcks av
+`test_permission_resources_sql_org_gating` (integrationstest med signerad `ds_actor`-cookie:
+rätt enhet 200, fel enhet 403; hoppas över på 0.x).
+
+### Mall-kontext (context-API ändrat i 1.0)
+
+Överskrivna mallar anpassades till 1.0:s kontext:
+- `database_color` är nu en **sträng**, inte en callable → `{{ database_color }}` (inte
+  `database_color(database)`) i `table.html`, `row.html`, `database-aveny-type.html`.
+- `table_actions()` → `actions()` i `table.html`.
+- `filtered_table_rows_count` → `count` i `table.html`.
+
+### Övrigt
+
+- `get_metadata`-hooken finns inte längre i core; `datasette.metadata()` är borttagen (ersatt av
+  async `get_database_metadata()`/`get_instance_metadata()`).
+- `/-/plugins.json` returnerar `{"ok": true, "plugins": [...]}` (dict), inte en ren lista.
+- Kör lokalt: `datasette` med plugin installerat mot `datasette>=1.0a0` (`--memory`-flagga, inte
+  positionsargumentet `memory` som fanns i 0.x).
+
 ## Known Limitations
 
 - `database.html` template cannot access individual table metadata directly
 - Some templates have limited access to certain metadata structures
+- **1.0:** config-prioriteten "metadata.json > SQLite" gäller inte för renderade titlar (mall-hjälpen
+  läser bara `svk_metadata.db`) — se `### Configuration System`. Ej åtgärdad.
 
 ## Future Work
 
