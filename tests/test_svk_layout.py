@@ -8,7 +8,11 @@ async def test_plugin_is_installed():
     datasette = Datasette(memory=True)
     response = await datasette.client.get("/-/plugins.json")
     assert response.status_code == 200
-    installed_plugins = {p["name"] for p in response.json()}
+    data = response.json()
+    # Datasette 1.0 wraps the list as {"ok": true, "plugins": [...]};
+    # Datasette 0.x returns a bare list.
+    plugins = data["plugins"] if isinstance(data, dict) else data
+    installed_plugins = {p["name"] for p in plugins}
     assert "datasette-svk-layout" in installed_plugins
 
 
@@ -245,3 +249,57 @@ def test_p360_view_database_allowed(mock_p360_config):
         resource="Public_360_2520026135"
     )
     assert result is None
+
+
+# -- permission_resources_sql integration tests (Datasette 1.0) --
+
+import sqlite3
+import datasette_svk_layout
+from datasette import hookspecs
+from datasette_svk_layout.metadata_db import MetadataDB
+
+
+@pytest.mark.asyncio
+async def test_permission_resources_sql_org_gating(tmp_path):
+    """view-database and its tables must be gated on organizations_ids under 1.0.
+
+    Exercises the permission_resources_sql hook end-to-end through real HTTP
+    requests: a database registered with organizations_ids in svk_metadata.db is
+    visible to an actor from that org (200) and forbidden to an actor from
+    another org (403), for both the database page and its tables (the org DENY
+    at the database level cascades to tables).
+    """
+    if not hasattr(hookspecs, "permission_resources_sql"):
+        pytest.skip("permission_resources_sql requires Datasette 1.0+")
+
+    db_file = tmp_path / "testdb_510.db"
+    con = sqlite3.connect(db_file)
+    con.execute("CREATE TABLE t (id INTEGER PRIMARY KEY, x TEXT)")
+    con.execute("INSERT INTO t (x) VALUES ('hi')")
+    con.commit()
+    con.close()
+
+    mdb = MetadataDB(tmp_path / "svk_metadata.db")
+    mdb.set_database_permissions(
+        "testdb_510", "view-database", {"organizations_ids": ["510"]}
+    )
+
+    old_instance = datasette_svk_layout._metadata_db_instance
+    datasette_svk_layout._metadata_db_instance = mdb
+    try:
+        datasette = Datasette([str(db_file)])
+        await datasette.invoke_startup()
+
+        def cookies(org):
+            actor = {"id": "u", "organizations_ids": [org]}
+            return {"ds_actor": datasette.sign({"a": actor}, "actor")}
+
+        # Right enhet -> allowed
+        assert (await datasette.client.get("/testdb_510", cookies=cookies(510))).status_code == 200
+        assert (await datasette.client.get("/testdb_510/t", cookies=cookies(510))).status_code == 200
+        # Wrong enhet -> forbidden (database-level DENY cascades to tables)
+        assert (await datasette.client.get("/testdb_510", cookies=cookies(999))).status_code == 403
+        assert (await datasette.client.get("/testdb_510/t", cookies=cookies(999))).status_code == 403
+    finally:
+        datasette_svk_layout._metadata_db_instance = old_instance
+        mdb.close()

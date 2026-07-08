@@ -163,58 +163,46 @@ class TestImport:
         assert meta2["title"] == "Sakila"
 
 
-@pytest.mark.asyncio
-async def test_get_metadata_hook(tmp_path):
-    """Test that the get_metadata hook injects SQLite metadata into Datasette."""
-    import datasette_svk_layout
+def test_get_metadata_hook(tmp_path):
+    """The get_metadata hook should assemble SQLite title + allow dicts.
 
-    # Set up a temp metadata db
+    Under Datasette 1.0 the get_metadata hookspec was removed, so core no longer
+    calls this hook and `datasette.metadata()` is gone. We therefore call the
+    plugin hook function directly and assert on its output. The assembled dict is
+    still consumed by Datasette 0.x; permission enforcement under 1.0 lives in
+    permission_resources_sql (see test_svk_layout.py) instead of the allow dict.
+    """
     db_path = tmp_path / "test_metadata.db"
     mdb = MetadataDB(db_path)
     mdb.set_database_metadata("test_db", title="From SQLite")
     mdb.set_database_permissions("test_db", "view-database", {"organizations_ids": ["510"]})
 
-    # Patch the global singleton
-    old_instance = datasette_svk_layout._metadata_db_instance
     datasette_svk_layout._metadata_db_instance = mdb
-
     try:
-        datasette = Datasette(memory=True)
-        await datasette.invoke_startup()
-
-        # The metadata should include our injected data
-        title = datasette.metadata("title", database="test_db")
-        assert title == "From SQLite"
-
-        allow = datasette.metadata("allow", database="test_db")
-        assert allow == {"organizations_ids": [510]}
+        result = datasette_svk_layout.get_metadata(
+            datasette=None, key=None, database="test_db", table=None
+        )
+        entry = result["databases"]["test_db"]
+        assert entry["title"] == "From SQLite"
+        # actor_value is stored as a string but coerced back to int on read.
+        assert entry["allow"] == {"organizations_ids": [510]}
     finally:
-        datasette_svk_layout._metadata_db_instance = old_instance
         mdb.close()
 
 
-@pytest.mark.asyncio
-async def test_metadata_json_overrides_sqlite(tmp_path):
-    """metadata.json should have higher priority than SQLite metadata."""
-    import datasette_svk_layout
+def test_get_formatted_title_uses_sqlite(tmp_path):
+    """The database title from svk_metadata.db is surfaced via the template helper.
 
+    On Datasette 1.0 templates render titles through get_formatted_database_title
+    (which reads MetadataDB directly), because the get_metadata hook no longer
+    feeds Datasette core.
+    """
     db_path = tmp_path / "test_metadata.db"
     mdb = MetadataDB(db_path)
     mdb.set_database_metadata("mydb", title="From SQLite")
 
-    old_instance = datasette_svk_layout._metadata_db_instance
     datasette_svk_layout._metadata_db_instance = mdb
-
     try:
-        # metadata.json override
-        datasette = Datasette(
-            memory=True,
-            metadata={"databases": {"mydb": {"title": "From metadata.json"}}},
-        )
-        await datasette.invoke_startup()
-
-        title = datasette.metadata("title", database="mydb")
-        assert title == "From metadata.json"
+        assert datasette_svk_layout.get_formatted_database_title("mydb") == "From SQLite"
     finally:
-        datasette_svk_layout._metadata_db_instance = old_instance
         mdb.close()
