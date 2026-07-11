@@ -251,9 +251,78 @@ def test_p360_view_database_allowed(mock_p360_config):
     assert result is None
 
 
+# -- database types from the svk-admin config store --
+
+import os
+import sqlite3
+import json as _json
+import datasette_svk_layout
+
+
+def _make_config_db(path, types):
+    """Create a minimal svk_admin.db-style config store with the given types."""
+    con = sqlite3.connect(path)
+    con.execute(
+        "CREATE TABLE database_types (type_name TEXT PRIMARY KEY, config TEXT NOT NULL,"
+        " updated_at TEXT NOT NULL DEFAULT (datetime('now')))"
+    )
+    for name, config in types.items():
+        con.execute(
+            "INSERT INTO database_types (type_name, config) VALUES (?, ?)",
+            (name, _json.dumps(config)),
+        )
+    con.commit()
+    con.close()
+
+
+def test_load_database_types_from_config_db(tmp_path):
+    """When config_db_path is set, type config is read live from svk_admin.db,
+    and the cache is busted when the store's mtime changes."""
+    cfg = tmp_path / "svk_admin.db"
+    _make_config_db(cfg, {"aveny": {"title_template": "Först {unit_name}"}})
+
+    old_path = datasette_svk_layout._config_db_path
+    try:
+        datasette_svk_layout._config_db_path = str(cfg)
+        datasette_svk_layout.clear_caches()
+
+        # get_database_config derives the type from the db name and reads it live.
+        conf = datasette_svk_layout.get_database_config("aveny_2520026135")
+        assert conf == {"title_template": "Först {unit_name}"}
+
+        # Edit the store and bump its mtime -> the cache reloads the new value.
+        con = sqlite3.connect(cfg)
+        con.execute(
+            "UPDATE database_types SET config = ? WHERE type_name = 'aveny'",
+            (_json.dumps({"title_template": "Ändrad {unit_name}"}),),
+        )
+        con.commit()
+        con.close()
+        os.utime(cfg, (os.path.getmtime(cfg) + 10, os.path.getmtime(cfg) + 10))
+
+        conf = datasette_svk_layout.get_database_config("aveny_2520026135")
+        assert conf == {"title_template": "Ändrad {unit_name}"}
+    finally:
+        datasette_svk_layout._config_db_path = old_path
+        datasette_svk_layout.clear_caches()
+
+
+def test_load_database_types_falls_back_to_bundled_snapshot():
+    """With no config_db_path, the bundled database_types.json is used."""
+    old_path = datasette_svk_layout._config_db_path
+    try:
+        datasette_svk_layout._config_db_path = None
+        datasette_svk_layout.clear_caches()
+        types = datasette_svk_layout.load_database_types()
+        # The bundled snapshot ships the known types.
+        assert "aveny" in types
+    finally:
+        datasette_svk_layout._config_db_path = old_path
+        datasette_svk_layout.clear_caches()
+
+
 # -- permission_resources_sql integration tests (Datasette 1.0) --
 
-import sqlite3
 import datasette_svk_layout
 from datasette import hookspecs
 from datasette_svk_layout.metadata_db import MetadataDB
