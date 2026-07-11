@@ -310,8 +310,10 @@ def permission_resources_sql(datasette, actor, action):
     "allow" without us having to re-grant the common case.
 
     - view-database: actor's ``organizations_ids`` must match the database's
-      registered org(s) in ``svk_metadata.db``; databases whose type requires
-      table roles the actor entirely lacks are also hidden.
+      registered org(s) in ``svk_metadata.db`` AND, if the database registered
+      åtkomstroller (view-database ``permissions``), the actor must hold at least
+      one of them; databases whose type requires table roles the actor entirely
+      lacks are also hidden. A view-database DENY cascades to tables and SQL.
     - table actions (view-table + mutations): actor must hold at least one of the
       roles configured for the table in ``database_types.json``.
     - execute-sql: actor must match the database's ``allow_sql`` roles.
@@ -337,20 +339,37 @@ def permission_resources_sql(datasette, actor, action):
     # parent-level DENY also cascades to every table and to execute-sql on that
     # database, so a wrong-enhet actor is blocked from the database page, its
     # tables and its SQL alike.
-    org_denied = set()
+    # The view-database allow may carry two independent gates:
+    #   - organizations_ids (enhet), and/or
+    #   - permissions (åtkomstroller, skrivna av svk-admin).
+    # They combine with AND: the actor must match the enhet AND hold at least
+    # one åtkomstroll. actor_matches_allow is OR *across keys*, so we must
+    # evaluate each key on its own dict rather than the merged allow — otherwise
+    # matching either the enhet or a role would wrongly grant access.
+    db_denied = {}
     for database_name in datasette.databases:
         if database_name == "_internal":
             continue
-        allow = db_entries.get(database_name, {}).get("allow")
-        if allow and not actor_matches_allow(actor, allow):
-            org_denied.add(database_name)
+        allow = db_entries.get(database_name, {}).get("allow") or {}
+        org_rule = (
+            {"organizations_ids": allow["organizations_ids"]}
+            if allow.get("organizations_ids")
+            else None
+        )
+        role_rule = (
+            {"permissions": allow["permissions"]} if allow.get("permissions") else None
+        )
+        if org_rule and not actor_matches_allow(actor, org_rule):
+            db_denied[database_name] = "svk: fel enhet (organizations_ids)"
+        elif role_rule and not actor_matches_allow(actor, role_rule):
+            db_denied[database_name] = "svk: saknar åtkomstroll (permissions)"
 
     for database_name in datasette.databases:
         if database_name == "_internal":
             continue
 
-        if database_name in org_denied:
-            collector.add(database_name, None, False, "svk: fel enhet (organizations_ids)")
+        if database_name in db_denied:
+            collector.add(database_name, None, False, db_denied[database_name])
             continue
 
         if action == "view-database":

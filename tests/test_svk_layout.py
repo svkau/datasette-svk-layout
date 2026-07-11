@@ -303,3 +303,53 @@ async def test_permission_resources_sql_org_gating(tmp_path):
     finally:
         datasette_svk_layout._metadata_db_instance = old_instance
         mdb.close()
+
+
+@pytest.mark.asyncio
+async def test_permission_resources_sql_access_roles(tmp_path):
+    """view-database must also gate on åtkomstroller (permissions), AND with org.
+
+    A database registered with both organizations_ids and view-database
+    ``permissions`` (åtkomstroller) is visible only to an actor that matches the
+    enhet AND holds at least one åtkomstroll. Missing either gate -> 403, and the
+    database-level DENY cascades to its tables.
+    """
+    if not hasattr(hookspecs, "permission_resources_sql"):
+        pytest.skip("permission_resources_sql requires Datasette 1.0+")
+
+    db_file = tmp_path / "roll_510.db"
+    con = sqlite3.connect(db_file)
+    con.execute("CREATE TABLE t (id INTEGER PRIMARY KEY, x TEXT)")
+    con.execute("INSERT INTO t (x) VALUES ('hi')")
+    con.commit()
+    con.close()
+
+    mdb = MetadataDB(tmp_path / "svk_metadata.db")
+    mdb.set_database_permissions(
+        "roll_510",
+        "view-database",
+        {"organizations_ids": ["510"], "permissions": ["access.search_casefiles"]},
+    )
+
+    old_instance = datasette_svk_layout._metadata_db_instance
+    datasette_svk_layout._metadata_db_instance = mdb
+    try:
+        datasette = Datasette([str(db_file)])
+        await datasette.invoke_startup()
+
+        def cookies(org, perms):
+            actor = {"id": "u", "organizations_ids": [org], "permissions": perms}
+            return {"ds_actor": datasette.sign({"a": actor}, "actor")}
+
+        role = ["access.search_casefiles"]
+        # Right enhet AND right åtkomstroll -> allowed (db + table)
+        assert (await datasette.client.get("/roll_510", cookies=cookies(510, role))).status_code == 200
+        assert (await datasette.client.get("/roll_510/t", cookies=cookies(510, role))).status_code == 200
+        # Right enhet but MISSING åtkomstroll -> forbidden (role gate), cascades to table
+        assert (await datasette.client.get("/roll_510", cookies=cookies(510, []))).status_code == 403
+        assert (await datasette.client.get("/roll_510/t", cookies=cookies(510, []))).status_code == 403
+        # Has the role but WRONG enhet -> forbidden (org gate; AND semantics)
+        assert (await datasette.client.get("/roll_510", cookies=cookies(999, role))).status_code == 403
+    finally:
+        datasette_svk_layout._metadata_db_instance = old_instance
+        mdb.close()
