@@ -9,16 +9,27 @@ from jinja2 import ChoiceLoader, FileSystemLoader, PrefixLoader, TemplateNotFoun
 from jinja2.loaders import BaseLoader
 from datasette_svk_layout.metadata_db import MetadataDB
 
+import sqlite3
+
 # Cache for units data and database types
 _units_cache = None
 _database_types_cache = None
+_database_types_mtime = None
 _metadata_db_instance = None
+
+# Optional path to the svk-admin config store (svk_admin.db). When set (via the
+# datasette-svk-layout ``config_db_path`` plugin config, resolved at startup),
+# database-type configuration is read live from that store's ``database_types``
+# table instead of the bundled snapshot — so edits made in the admin SPA take
+# public effect. Falls back to the bundled database_types.json when unset.
+_config_db_path = None
 
 def clear_caches():
     """Clear all caches to reload data"""
-    global _units_cache, _database_types_cache
+    global _units_cache, _database_types_cache, _database_types_mtime
     _units_cache = None
     _database_types_cache = None
+    _database_types_mtime = None
     if _metadata_db_instance:
         _metadata_db_instance._invalidate_cache()
 
@@ -62,9 +73,43 @@ def load_units_data():
             pass
     return _units_cache
 
+def _load_types_from_config_db(path):
+    """Read {type_name: config} from an svk-admin svk_admin.db config store."""
+    types = {}
+    conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    try:
+        for type_name, config in conn.execute(
+            "SELECT type_name, config FROM database_types"
+        ):
+            try:
+                types[type_name] = json.loads(config)
+            except (ValueError, TypeError):
+                pass
+    finally:
+        conn.close()
+    return types
+
+
 def load_database_types():
-    """Load and cache database_types.json data"""
-    global _database_types_cache
+    """Load and cache database type configuration.
+
+    When ``config_db_path`` is configured (svk-admin's editable store), types are
+    read live from its ``database_types`` table and the cache is busted whenever
+    that file's mtime changes, so admin edits take public effect without a
+    restart. Otherwise the bundled ``database_types.json`` snapshot is used.
+    """
+    global _database_types_cache, _database_types_mtime
+
+    if _config_db_path and os.path.exists(_config_db_path):
+        try:
+            mtime = os.path.getmtime(_config_db_path)
+            if _database_types_cache is None or mtime != _database_types_mtime:
+                _database_types_cache = _load_types_from_config_db(_config_db_path)
+                _database_types_mtime = mtime
+            return _database_types_cache
+        except Exception:
+            pass  # fall back to the bundled snapshot below
+
     if _database_types_cache is None:
         types_file = Path(__file__).parent / "data" / "database_types.json"
         _database_types_cache = {}
@@ -161,6 +206,12 @@ def get_database_type(database_name):
 def startup(datasette):
     """Initialize metadata database on startup."""
     _get_metadata_db(datasette)
+
+    # Resolve the optional svk-admin config store path once. When set, database
+    # type configuration is read live from it (see load_database_types).
+    global _config_db_path
+    plugin_config = datasette.plugin_config("datasette-svk-layout") or {}
+    _config_db_path = plugin_config.get("config_db_path")
 
 
 @hookimpl
